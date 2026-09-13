@@ -5,7 +5,6 @@ import android.content.Context
 private const val PREFS_NAME = "app_prefs"
 
 class AppPreferences(context: Context) {
-
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     fun getBoolean(key: String, default: Boolean = false): Boolean =
