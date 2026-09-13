@@ -52,5 +52,13 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
     implementation(libs.androidx.navigation.compose)
+<<<<<<< HEAD
     implementation(libs.androidx.material.icons.extended)
+=======
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.coil.compose)
+    implementation(libs.androidx.compose.material.icons.extended)
+>>>>>>> origin/feat/home
 }
