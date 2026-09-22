@@ -9,7 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.cafeenlinea.ui.auth.data.SessionPreferences
 import com.example.cafeenlinea.ui.auth.view.LoginScreenView
-import com.example.cafeenlinea.ui.home.view.CafeteriaHomeView
+import com.example.cafeenlinea.ui.main.MainScreen
 import com.example.cafeenlinea.ui.onboarding.data.OnboardingPreferences
 import com.example.cafeenlinea.ui.onboarding.view.OnboardingView
 
@@ -27,8 +27,6 @@ fun AppNavHost(
     val onboardingPreferences = remember { OnboardingPreferences(context) }
     val sessionPreferences = remember { SessionPreferences(context) }
 
-    // Una sesión activa gana sobre todo lo demás; si no hay sesión, se decide
-    // entre login u onboarding según si ya vio el onboarding antes.
     val startDestination = when {
         sessionPreferences.isLoggedIn() -> NavRoutes.HOME
         onboardingPreferences.hasCompletedOnboarding() -> NavRoutes.LOGIN
@@ -60,7 +58,13 @@ fun AppNavHost(
         }
 
         composable(NavRoutes.HOME) {
-            CafeteriaHomeView()
+            MainScreen(
+                onLogout = {
+                    navController.navigate(NavRoutes.LOGIN) {
+                        popUpTo(NavRoutes.HOME) { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }

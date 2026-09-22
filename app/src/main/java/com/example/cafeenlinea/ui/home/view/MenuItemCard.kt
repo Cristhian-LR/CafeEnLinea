@@ -5,11 +5,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -21,22 +22,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.cafeenlinea.ui.cart.model.CartItem
+import com.example.cafeenlinea.ui.cart.viewmodel.CartViewModel
 import com.example.cafeenlinea.ui.home.model.CafeteriaProduct
 
-/**
- * Renglón de un producto del menú: foto pequeña a la izquierda, datos a la
- * derecha. Se usa en la lista vertical de cada sección.
- *
- * `description` y `badge` pueden venir `""`: en ese caso simplemente no se pintan.
- *
- * Reutilizable: recibe solo el [CafeteriaProduct], sin navegación ni red.
- *
- * @param product Producto a mostrar.
- * @param modifier Modificador externo.
- */
 @Composable
 fun MenuItemCard(
     product: CafeteriaProduct,
+    cartViewModel: CartViewModel,
     modifier: Modifier = Modifier
 ) {
     Card(modifier = modifier.fillMaxWidth()) {
@@ -71,13 +64,31 @@ fun MenuItemCard(
                 }
                 CafeteriaBadge(product.badge)
             }
-            Spacer(Modifier.width(12.dp))
-            Text(
-                text = product.priceText,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
-            )
+            Spacer(Modifier.width(8.dp))
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = product.priceText,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+                Button(
+                    onClick = {
+                        cartViewModel.addItem(
+                            CartItem(
+                                id = "product_${product.section}_${product.id}",
+                                name = product.name,
+                                price = product.price,
+                                priceText = product.priceText,
+                                image = product.image
+                            )
+                        )
+                    },
+                    contentPadding = ButtonDefaults.TextButtonContentPadding
+                ) {
+                    Text("Agregar")
+                }
+            }
         }
     }
 }
