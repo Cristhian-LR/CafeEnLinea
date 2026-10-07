@@ -2,9 +2,18 @@ package com.example.cafeenlinea.ui.onboarding.viewmodel
 
 import android.app.Application
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BakeryDining
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.CreditCard
+import androidx.compose.material.icons.filled.EmojiFoodBeverage
 import androidx.compose.material.icons.filled.LocalCafe
+import androidx.compose.material.icons.filled.LocalMall
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Storefront
+import androidx.compose.material.icons.filled.Timer
 import androidx.lifecycle.AndroidViewModel
 import com.example.cafeenlinea.ui.onboarding.data.OnboardingPreferences
 import com.example.cafeenlinea.ui.onboarding.model.OnboardingPage
@@ -26,18 +35,36 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
     private val pages = listOf(
         OnboardingPage(
             icon = Icons.Filled.LocalCafe,
+            tag = "Bienvenida",
             title = "Bienvenido a Café en Línea",
-            description = "Ordena tu comida y snacks favoritos desde cualquier punto del campus."
+            description = "Ordena tu comida y snacks favoritos desde cualquier punto del campus.",
+            highlights = listOf(
+                Icons.Filled.Restaurant,
+                Icons.Filled.BakeryDining,
+                Icons.Filled.EmojiFoodBeverage
+            )
         ),
         OnboardingPage(
             icon = Icons.Filled.ShoppingCart,
+            tag = "Pedidos",
             title = "Ordena y paga desde tu celular",
-            description = "Elige tu cafetería favorita, arma tu pedido y paga sin salir de la app."
+            description = "Elige tu cafetería favorita, arma tu pedido y paga sin salir de la app.",
+            highlights = listOf(
+                Icons.Filled.Storefront,
+                Icons.Filled.CreditCard,
+                Icons.Filled.PhoneAndroid
+            )
         ),
         OnboardingPage(
-            icon = Icons.Filled.Notifications,
+            icon = Icons.Filled.NotificationsActive,
+            tag = "Sin filas",
             title = "Recoge sin hacer fila",
-            description = "Te avisamos en cuanto tu pedido esté listo para que solo pases a recogerlo."
+            description = "Te avisamos en cuanto tu pedido esté listo para que solo pases a recogerlo.",
+            highlights = listOf(
+                Icons.Filled.Timer,
+                Icons.Filled.CheckCircle,
+                Icons.Filled.LocalMall
+            )
         )
     )
 
