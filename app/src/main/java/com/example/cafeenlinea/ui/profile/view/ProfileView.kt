@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.SupportAgent
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -45,10 +46,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -59,6 +62,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.cafeenlinea.ui.auth.data.SessionPreferences
+import com.example.cafeenlinea.ui.profile.data.CloudinaryUploader
+import kotlinx.coroutines.launch
 import java.io.File
 
 private const val SUPPORT_EMAIL = "soporte@cafeenlinea.com"
@@ -95,24 +100,34 @@ private fun ProfileMainContent(
     val context = LocalContext.current
     val sessionPreferences = remember { SessionPreferences(context) }
     val username = sessionPreferences.username() ?: "Usuario"
+    val coroutineScope = rememberCoroutineScope()
 
-    var photoPath by remember { mutableStateOf(sessionPreferences.profilePhotoPath()) }
+    // Ahora guarda una URL de Cloudinary, no una ruta local.
+    var photoUrl by remember { mutableStateOf(sessionPreferences.profilePhotoPath()) }
+    var isUploading by remember { mutableStateOf(false) }
     var showPhotoMenu by remember { mutableStateOf(false) }
     var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
+
+    /** Sube la imagen elegida/tomada a Cloudinary y guarda la URL resultante. */
+    fun uploadAndSave(uri: Uri) {
+        isUploading = true
+        coroutineScope.launch {
+            val url = CloudinaryUploader.uploadImage(context, uri)
+            isUploading = false
+            if (url != null) {
+                sessionPreferences.saveProfilePhotoPath(url)
+                photoUrl = url
+            } else {
+                Toast.makeText(context, "No se pudo subir la foto, intenta de nuevo", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     // --- Galería: selector clásico, sí pide permiso explícito ---
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        if (uri != null) {
-            val savedFile = copyUriToInternalStorage(context, uri)
-            if (savedFile != null) {
-                sessionPreferences.saveProfilePhotoPath(savedFile.absolutePath)
-                photoPath = savedFile.absolutePath
-            } else {
-                Toast.makeText(context, "No se pudo guardar la foto", Toast.LENGTH_SHORT).show()
-            }
-        }
+        if (uri != null) uploadAndSave(uri)
     }
 
     val galleryPermission = if (android.os.Build.VERSION.SDK_INT >= 33) {
@@ -136,15 +151,7 @@ private fun ProfileMainContent(
         contract = ActivityResultContracts.TakePicture()
     ) { success: Boolean ->
         val uri = pendingCameraUri
-        if (success && uri != null) {
-            val savedFile = copyUriToInternalStorage(context, uri)
-            if (savedFile != null) {
-                sessionPreferences.saveProfilePhotoPath(savedFile.absolutePath)
-                photoPath = savedFile.absolutePath
-            } else {
-                Toast.makeText(context, "No se pudo guardar la foto", Toast.LENGTH_SHORT).show()
-            }
-        }
+        if (success && uri != null) uploadAndSave(uri)
     }
 
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
@@ -175,46 +182,65 @@ private fun ProfileMainContent(
                 modifier = Modifier
                     .size(96.dp)
                     .clip(CircleShape)
-                    .clickable { showPhotoMenu = true },
+                    .clickable(enabled = !isUploading) { showPhotoMenu = true },
                 contentAlignment = Alignment.Center
             ) {
-                if (photoPath != null) {
-                    AsyncImage(
-                        model = File(photoPath!!),
-                        contentDescription = "Foto de perfil",
-                        modifier = Modifier
-                            .size(96.dp)
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Surface(
-                        modifier = Modifier.size(96.dp),
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Person,
-                            contentDescription = null,
-                            modifier = Modifier.padding(20.dp),
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                when {
+                    isUploading -> {
+                        Surface(
+                            modifier = Modifier.size(96.dp),
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(32.dp),
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
+                    }
+                    photoUrl != null -> {
+                        AsyncImage(
+                            model = photoUrl,
+                            contentDescription = "Foto de perfil",
+                            modifier = Modifier
+                                .size(96.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
                         )
+                    }
+                    else -> {
+                        Surface(
+                            modifier = Modifier.size(96.dp),
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Person,
+                                contentDescription = null,
+                                modifier = Modifier.padding(20.dp),
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
                     }
                 }
 
-                Surface(
-                    modifier = Modifier
-                        .size(28.dp)
-                        .align(Alignment.BottomEnd),
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.CameraAlt,
-                        contentDescription = "Cambiar foto",
-                        modifier = Modifier.padding(5.dp),
-                        tint = MaterialTheme.colorScheme.onPrimary
-                    )
+                if (!isUploading) {
+                    Surface(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .align(Alignment.BottomEnd),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.CameraAlt,
+                            contentDescription = "Cambiar foto",
+                            modifier = Modifier.padding(5.dp),
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
                 }
 
                 DropdownMenu(
@@ -356,20 +382,4 @@ private fun ProfileOptionRow(
 private fun createTempCameraUri(context: android.content.Context): Uri {
     val tempFile = File.createTempFile("camera_photo_", ".jpg", context.cacheDir)
     return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", tempFile)
-}
-
-/** Copia cualquier Uri (de galería o de la foto recién tomada) al almacenamiento interno fijo de la app. */
-private fun copyUriToInternalStorage(context: android.content.Context, uri: Uri): File? {
-    return try {
-        val inputStream = context.contentResolver.openInputStream(uri) ?: return null
-        val file = File(context.filesDir, "profile_photo.jpg")
-        inputStream.use { input ->
-            file.outputStream().use { output ->
-                input.copyTo(output)
-            }
-        }
-        file
-    } catch (e: Exception) {
-        null
-    }
 }
