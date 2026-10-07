@@ -34,41 +34,27 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.cafeenlinea.ui.cart.viewmodel.CartViewModel
 import com.example.cafeenlinea.ui.home.model.Shop
 import com.example.cafeenlinea.ui.home.viewmodel.CafeteriaHomeViewModel
 
-/**
- * Pantalla "home" de la cafetería. Solo dibuja: los datos vienen de
- * [CafeteriaHomeViewModel] (que llama a `GET /api/home/cafeteria/`).
- *
- * Estructura:
- * - Encabezado con nombre, lema y banner de promoción.
- * - "Destacados" → carrusel horizontal de [FeaturedCard].
- * - Una sección por categoría del menú (con su nota) → lista vertical de [MenuItemCard].
- * - "Combos" → carrusel horizontal de [ComboCard] + nota general.
- * - "Extras" → lista simple.
- *
- * @param onBack Se dispara al tocar la flecha de la barra superior.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CafeteriaHomeView(
     onBack: () -> Unit = {},
-    viewModel: CafeteriaHomeViewModel = viewModel()
+    viewModel: CafeteriaHomeViewModel = viewModel(),
+    cartViewModel: CartViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Cafetería") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar")
-                    }
-                }
+                title = { Text("Cafetería") }
             )
         }
+
+
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -106,7 +92,7 @@ fun CafeteriaHomeView(
                                 contentPadding = PaddingValues(horizontal = 16.dp),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                items(uiState.featured) { FeaturedCard(it) }
+                                items(uiState.featured) { FeaturedCard(it, cartViewModel = cartViewModel) }
                             }
                         }
                     }
@@ -137,6 +123,7 @@ fun CafeteriaHomeView(
                         ) { product ->
                             MenuItemCard(
                                 product = product,
+                                cartViewModel = cartViewModel,
                                 modifier = Modifier.padding(horizontal = 16.dp)
                             )
                         }
@@ -149,7 +136,7 @@ fun CafeteriaHomeView(
                                 contentPadding = PaddingValues(horizontal = 16.dp),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                items(uiState.combos) { ComboCard(it) }
+                                items(uiState.combos) { ComboCard(it, cartViewModel = cartViewModel) }
                             }
                         }
                         if (uiState.combosNote.isNotBlank()) {
@@ -189,7 +176,6 @@ fun CafeteriaHomeView(
     }
 }
 
-/** Encabezado con el nombre de la cafetería, su lema y el banner de promoción. */
 @Composable
 private fun ShopHeader(shop: Shop) {
     Column(
@@ -225,7 +211,6 @@ private fun ShopHeader(shop: Shop) {
     }
 }
 
-/** Encabezado de sección dentro del scroll. */
 @Composable
 private fun SectionTitle(text: String) {
     Text(

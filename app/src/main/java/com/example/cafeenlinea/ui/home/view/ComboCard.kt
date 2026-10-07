@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -15,19 +17,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.cafeenlinea.ui.cart.model.CartItem
+import com.example.cafeenlinea.ui.cart.viewmodel.CartViewModel
 import com.example.cafeenlinea.ui.home.model.Combo
 
-/**
- * Tarjeta de un combo, para el carrusel horizontal (`LazyRow`). Ancho fijo.
- *
- * Reutilizable: recibe solo el [Combo], sin navegación ni red.
- *
- * @param combo Combo a mostrar.
- * @param modifier Modificador externo (el ancho lo fija el propio card).
- */
 @Composable
 fun ComboCard(
     combo: Combo,
+    cartViewModel: CartViewModel,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -62,6 +59,23 @@ fun ComboCard(
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
                 )
+                Button(
+                    onClick = {
+                        cartViewModel.addItem(
+                            CartItem(
+                                id = "combo_${combo.id}",
+                                name = combo.name,
+                                price = combo.price,
+                                priceText = combo.priceText,
+                                image = combo.image
+                            )
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = ButtonDefaults.TextButtonContentPadding
+                ) {
+                    Text("Agregar")
+                }
             }
         }
     }
