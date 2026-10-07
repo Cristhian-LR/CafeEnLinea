@@ -1,7 +1,9 @@
 package com.example.cafeenlinea.ui.profile.view
 
+import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -15,17 +17,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.SupportAgent
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -46,17 +53,16 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.cafeenlinea.ui.auth.data.SessionPreferences
 import java.io.File
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 
 private const val SUPPORT_EMAIL = "soporte@cafeenlinea.com"
-private const val SUPPORT_WHATSAPP_NUMBER = "526142426011" // código país + número, sin + ni espacios
+private const val SUPPORT_WHATSAPP_NUMBER = "5216141234567" // código país + número, sin + ni espacios
 
 @Composable
 fun ProfileView(onLogout: () -> Unit) {
@@ -90,20 +96,66 @@ private fun ProfileMainContent(
     val sessionPreferences = remember { SessionPreferences(context) }
     val username = sessionPreferences.username() ?: "Usuario"
 
-    // mutableStateOf para que la UI se redibuje en cuanto cambie la foto.
     var photoPath by remember { mutableStateOf(sessionPreferences.profilePhotoPath()) }
+    var showPhotoMenu by remember { mutableStateOf(false) }
+    var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
 
-    val photoPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia()
+    // --- Galería: selector clásico, sí pide permiso explícito ---
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         if (uri != null) {
-            val savedFile = copyImageToInternalStorage(context, uri)
+            val savedFile = copyUriToInternalStorage(context, uri)
             if (savedFile != null) {
                 sessionPreferences.saveProfilePhotoPath(savedFile.absolutePath)
                 photoPath = savedFile.absolutePath
             } else {
                 Toast.makeText(context, "No se pudo guardar la foto", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    val galleryPermission = if (android.os.Build.VERSION.SDK_INT >= 33) {
+        Manifest.permission.READ_MEDIA_IMAGES
+    } else {
+        Manifest.permission.READ_EXTERNAL_STORAGE
+    }
+
+    val galleryPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            galleryLauncher.launch("image/*")
+        } else {
+            Toast.makeText(context, "Necesitas dar permiso de galería para elegir la foto", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // --- Cámara ---
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success: Boolean ->
+        val uri = pendingCameraUri
+        if (success && uri != null) {
+            val savedFile = copyUriToInternalStorage(context, uri)
+            if (savedFile != null) {
+                sessionPreferences.saveProfilePhotoPath(savedFile.absolutePath)
+                photoPath = savedFile.absolutePath
+            } else {
+                Toast.makeText(context, "No se pudo guardar la foto", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            val uri = createTempCameraUri(context)
+            pendingCameraUri = uri
+            cameraLauncher.launch(uri)
+        } else {
+            Toast.makeText(context, "Necesitas dar permiso de cámara para tomar la foto", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -123,13 +175,7 @@ private fun ProfileMainContent(
                 modifier = Modifier
                     .size(96.dp)
                     .clip(CircleShape)
-                    .clickable {
-                        photoPickerLauncher.launch(
-                            androidx.activity.result.PickVisualMediaRequest(
-                                ActivityResultContracts.PickVisualMedia.ImageOnly
-                            )
-                        )
-                    },
+                    .clickable { showPhotoMenu = true },
                 contentAlignment = Alignment.Center
             ) {
                 if (photoPath != null) {
@@ -156,7 +202,6 @@ private fun ProfileMainContent(
                     }
                 }
 
-                // Indicador de "editable" en la esquina.
                 Surface(
                     modifier = Modifier
                         .size(28.dp)
@@ -169,6 +214,42 @@ private fun ProfileMainContent(
                         contentDescription = "Cambiar foto",
                         modifier = Modifier.padding(5.dp),
                         tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = showPhotoMenu,
+                    onDismissRequest = { showPhotoMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Tomar foto") },
+                        leadingIcon = { Icon(Icons.Filled.CameraAlt, contentDescription = null) },
+                        onClick = {
+                            showPhotoMenu = false
+                            val hasPermission = context.checkSelfPermission(Manifest.permission.CAMERA) ==
+                                    PackageManager.PERMISSION_GRANTED
+                            if (hasPermission) {
+                                val uri = createTempCameraUri(context)
+                                pendingCameraUri = uri
+                                cameraLauncher.launch(uri)
+                            } else {
+                                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                            }
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Elegir de galería") },
+                        leadingIcon = { Icon(Icons.Filled.Photo, contentDescription = null) },
+                        onClick = {
+                            showPhotoMenu = false
+                            val hasPermission = context.checkSelfPermission(galleryPermission) ==
+                                    PackageManager.PERMISSION_GRANTED
+                            if (hasPermission) {
+                                galleryLauncher.launch("image/*")
+                            } else {
+                                galleryPermissionLauncher.launch(galleryPermission)
+                            }
+                        }
                     )
                 }
             }
@@ -271,12 +352,14 @@ private fun ProfileOptionRow(
     }
 }
 
-/**
- * Copia la imagen elegida de la galería al almacenamiento interno de la app
- * (archivo propio, no depende de permisos ni de que la URI original siga
- * siendo válida después de reiniciar la app).
- */
-private fun copyImageToInternalStorage(context: android.content.Context, uri: Uri): File? {
+/** Crea un archivo temporal en cache y devuelve su Uri segura (vía FileProvider) para que la cámara escriba ahí. */
+private fun createTempCameraUri(context: android.content.Context): Uri {
+    val tempFile = File.createTempFile("camera_photo_", ".jpg", context.cacheDir)
+    return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", tempFile)
+}
+
+/** Copia cualquier Uri (de galería o de la foto recién tomada) al almacenamiento interno fijo de la app. */
+private fun copyUriToInternalStorage(context: android.content.Context, uri: Uri): File? {
     return try {
         val inputStream = context.contentResolver.openInputStream(uri) ?: return null
         val file = File(context.filesDir, "profile_photo.jpg")
