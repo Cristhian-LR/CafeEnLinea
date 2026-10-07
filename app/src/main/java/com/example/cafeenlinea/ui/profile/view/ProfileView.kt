@@ -56,7 +56,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 
 private const val SUPPORT_EMAIL = "soporte@cafeenlinea.com"
-private const val SUPPORT_WHATSAPP_NUMBER = "5216141234567" // código país + número, sin + ni espacios
+private const val SUPPORT_WHATSAPP_NUMBER = "526142426011" // código país + número, sin + ni espacios
 
 @Composable
 fun ProfileView(onLogout: () -> Unit) {
