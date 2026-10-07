@@ -2,6 +2,7 @@ package com.example.cafeenlinea.ui.auth.view
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,7 +35,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -70,6 +73,7 @@ fun LoginScreenView(
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
 
     LaunchedEffect(uiState.isLoggedIn) {
         if (uiState.isLoggedIn) onLoginSuccess()
@@ -79,6 +83,10 @@ fun LoginScreenView(
         modifier = Modifier
             .fillMaxSize()
             .background(BgWhite)
+            // Hide the keyboard when tapping outside the text fields.
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = { focusManager.clearFocus() })
+            }
     ) {
         Column(
             modifier = Modifier
@@ -189,7 +197,10 @@ fun LoginScreenView(
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
-                onClick = { viewModel.login(username, password) },
+                onClick = {
+                    focusManager.clearFocus()
+                    viewModel.login(username, password)
+                },
                 enabled = !uiState.isLoading,
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
