@@ -48,7 +48,16 @@ data class UserDto(
  *   sesión; la vista lo observa para navegar a "tabs".
  */
 data class LoginUiState(
+    val usernameText: String = "",
+    val passwordText: String = "",
     val isLoading: Boolean = false,
+    val isLoggedIn: Boolean = false,
     val error: String? = null,
-    val isLoggedIn: Boolean = false
-)
+    val usernameError: String? = null,
+    val passwordError: String? = null,
+    val isLockedOut: Boolean = false,     // True cuando excede los intentos
+    val lockOutSeconds: Int = 0           // Segundos restantes de espera
+) {
+    val isButtonEnabled: Boolean
+        get() = usernameText.isNotBlank() && passwordText.isNotBlank() && !isLoading && !isLockedOut
+}
