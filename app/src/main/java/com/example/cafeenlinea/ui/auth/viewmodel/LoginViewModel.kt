@@ -8,6 +8,8 @@ import com.example.cafeenlinea.ui.auth.model.LoginRequest
 import com.example.cafeenlinea.ui.auth.model.LoginResponse
 import com.example.cafeenlinea.ui.auth.model.LoginUiState
 import com.example.cafeenlinea.ui.auth.network.AuthRetrofitClient
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,13 +18,6 @@ import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.net.SocketTimeoutException
 
-/**
- * ViewModel de la pantalla de login. Dueño del estado ([LoginUiState]) y de la
- * lógica: llamar a la API, guardar la sesión y traducir los errores a mensajes.
- *
- * Extiende [AndroidViewModel] para pasarle el `Context` a [SessionPreferences]
- * sin arriesgar fugas de memoria (mismo criterio que `OnboardingViewModel`).
- */
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
     private val session = SessionPreferences(application)
@@ -31,28 +26,86 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
-    /**
-     * Intenta iniciar sesión. Flujo:
-     * 1. Valida que los campos no estén vacíos.
-     * 2. `isLoading = true`, limpia error previo.
-     * 3. `POST /api/auth/login/` (con un reintento si el servidor está dormido).
-     * 4. Guarda `access` + `refresh` + `user` y pone `isLoggedIn = true`.
-     * 5. Cualquier fallo se traduce a un mensaje para el formulario.
-     */
-    fun login(username: String, password: String) {
-        if (username.isBlank() || password.isBlank()) {
-            _uiState.update { it.copy(error = "Ingresa usuario y contraseña") }
+    private var failedAttempts = 0
+    private val maxAttempts = 3
+    private var lockOutJob: Job? = null
+
+    /** Actualiza el usuario y evalúa su error individual */
+    fun onUsernameChanged(newUsername: String) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                usernameText = newUsername,
+                usernameError = if (newUsername.isBlank()) "El usuario es requerido" else null,
+                error = if (currentState.isLockedOut) currentState.error else null
+            )
+        }
+    }
+
+    /** Actualiza la contraseña y evalúa su error individual */
+    fun onPasswordChanged(newPassword: String) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                passwordText = newPassword,
+                passwordError = if (newPassword.isBlank()) "La contraseña es requerida" else null,
+                error = if (currentState.isLockedOut) currentState.error else null
+            )
+        }
+    }
+
+    /** Intenta iniciar sesión con reintentos y control de bloqueo */
+    fun login(
+        username: String = _uiState.value.usernameText,
+        password: String = _uiState.value.passwordText
+    ) {
+        if (_uiState.value.isLockedOut) return
+
+        val uError = if (username.isBlank()) "El usuario es requerido" else null
+        val pError = if (password.isBlank()) "La contraseña es requerida" else null
+
+        if (uError != null || pError != null) {
+            _uiState.update {
+                it.copy(
+                    usernameError = uError,
+                    passwordError = pError,
+                    error = "Completa los campos requeridos"
+                )
+            }
             return
         }
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    error = null,
+                    usernameError = null,
+                    passwordError = null
+                )
+            }
             try {
                 val response = loginWithRetry(LoginRequest(username.trim(), password))
                 session.saveSession(response.access, response.refresh, response.user)
+
+                // Éxito: reiniciamos el contador de fallos
+                failedAttempts = 0
                 _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
             } catch (e: HttpException) {
-                _uiState.update { it.copy(isLoading = false, error = messageForHttp(e.code())) }
+                if (e.code() == 401) {
+                    failedAttempts++
+                    if (failedAttempts >= maxAttempts) {
+                        startLockOutTimer()
+                    } else {
+                        val remaining = maxAttempts - failedAttempts
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                error = "Usuario o contraseña incorrectos. Intentos restantes: $remaining"
+                            )
+                        }
+                    }
+                } else {
+                    _uiState.update { it.copy(isLoading = false, error = messageForHttp(e.code())) }
+                }
             } catch (e: SocketTimeoutException) {
                 _uiState.update {
                     it.copy(isLoading = false, error = "El servidor está iniciando. Vuelve a intentar.")
@@ -65,15 +118,38 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** Limpia el mensaje de error (p. ej. cuando el usuario vuelve a escribir). */
-    fun clearError() {
-        _uiState.update { it.copy(error = null) }
+    /** Temporizador de bloqueo temporal por demasiados intentos */
+    private fun startLockOutTimer() {
+        lockOutJob?.cancel()
+        lockOutJob = viewModelScope.launch {
+            for (seconds in 30 downTo 1) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        isLockedOut = true,
+                        lockOutSeconds = seconds,
+                        error = "Demasiados intentos fallidos. Espera $seconds segundos."
+                    )
+                }
+                delay(1000)
+            }
+            failedAttempts = 0
+            _uiState.update {
+                it.copy(
+                    isLockedOut = false,
+                    lockOutSeconds = 0,
+                    error = null
+                )
+            }
+        }
     }
 
-    /**
-     * Llama al login y, si el primer intento cae por timeout (cold start de Render),
-     * reintenta una sola vez.
-     */
+    fun clearError() {
+        if (!_uiState.value.isLockedOut) {
+            _uiState.update { it.copy(error = null) }
+        }
+    }
+
     private suspend fun loginWithRetry(request: LoginRequest): LoginResponse =
         try {
             authService.login(request)
