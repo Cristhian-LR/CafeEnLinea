@@ -136,8 +136,8 @@ fun CafeteriaHomeView(
                                         contentPadding = PaddingValues(horizontal = 16.dp),
                                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
-                                        items(uiState.featured) {
-                                            FeaturedCard(it, cartViewModel = cartViewModel)
+                                        items(uiState.featured) { 
+                                            FeaturedCard(it, cartViewModel = cartViewModel) 
                                         }
                                     }
                                 }
@@ -182,8 +182,8 @@ fun CafeteriaHomeView(
                                         contentPadding = PaddingValues(horizontal = 16.dp),
                                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
-                                        items(uiState.combos) {
-                                            ComboCard(it, cartViewModel = cartViewModel)
+                                        items(uiState.combos) { 
+                                            ComboCard(it, cartViewModel = cartViewModel) 
                                         }
                                     }
                                 }

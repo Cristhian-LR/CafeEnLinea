@@ -2,33 +2,31 @@ package com.example.cafeenlinea.ui.home.view
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.cafeenlinea.ui.cart.model.CartItem
+import com.example.cafeenlinea.ui.cart.viewmodel.CartViewModel
 import com.example.cafeenlinea.ui.home.model.FeaturedItem
 
-/**
- * Tarjeta de un platillo destacado, para el carrusel horizontal (`LazyRow`).
- * Ancho fijo.
- *
- * Reutilizable: recibe solo el [FeaturedItem], sin navegación ni red.
- *
- * @param item Platillo a mostrar.
- * @param modifier Modificador externo (el ancho lo fija el propio card).
- */
 @Composable
 fun FeaturedCard(
     item: FeaturedItem,
+    cartViewModel: CartViewModel,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -53,12 +51,34 @@ fun FeaturedCard(
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold
                 )
-                Text(
-                    text = item.priceText,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = item.priceText,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Button(
+                        onClick = {
+                            cartViewModel.addItem(
+                                CartItem(
+                                    id = "featured_${item.id}",
+                                    name = item.name,
+                                    price = item.price,
+                                    priceText = item.priceText,
+                                    image = item.image
+                                )
+                            )
+                        },
+                        contentPadding = ButtonDefaults.TextButtonContentPadding
+                    ) {
+                        Text("Agregar")
+                    }
+                }
             }
         }
     }
