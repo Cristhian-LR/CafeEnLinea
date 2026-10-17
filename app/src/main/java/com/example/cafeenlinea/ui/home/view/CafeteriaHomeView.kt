@@ -17,7 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,6 +38,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.cafeenlinea.common.components.CafeLoading
 import com.example.cafeenlinea.ui.cart.viewmodel.CartViewModel
 import com.example.cafeenlinea.ui.home.model.Shop
 import com.example.cafeenlinea.ui.home.viewmodel.CafeteriaHomeViewModel
@@ -55,6 +55,7 @@ import com.example.cafeenlinea.ui.home.viewmodel.CafeteriaHomeViewModel
  * "Extras" → lista simple.
  *
  * C02: Implementa PullToRefreshBox y manejo de Snackbar ante errores de recarga.
+ * C03: Sustituye el cargador circular por la animación Lottie CafeLoading.
  *
  * @param onBack Se dispara al tocar la flecha de la barra superior.
  */
@@ -92,11 +93,9 @@ fun CafeteriaHomeView(
                 .padding(innerPadding)
         ) {
             when {
-                // Carga inicial completa (pantalla en blanco al abrir la app)
+                // C03: Animación Lottie en lugar de CircularProgressIndicator
                 uiState.isLoading && uiState.shop == null -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    CafeLoading()
                 }
 
                 // Error inicial sin datos previos
@@ -136,8 +135,8 @@ fun CafeteriaHomeView(
                                         contentPadding = PaddingValues(horizontal = 16.dp),
                                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
-                                        items(uiState.featured) { 
-                                            FeaturedCard(it, cartViewModel = cartViewModel) 
+                                        items(uiState.featured) {
+                                            FeaturedCard(it, cartViewModel = cartViewModel)
                                         }
                                     }
                                 }
@@ -182,8 +181,8 @@ fun CafeteriaHomeView(
                                         contentPadding = PaddingValues(horizontal = 16.dp),
                                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
-                                        items(uiState.combos) { 
-                                            ComboCard(it, cartViewModel = cartViewModel) 
+                                        items(uiState.combos) {
+                                            ComboCard(it, cartViewModel = cartViewModel)
                                         }
                                     }
                                 }
