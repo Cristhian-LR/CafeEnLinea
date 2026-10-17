@@ -8,10 +8,10 @@ package com.example.cafeenlinea.ui.home.model
  * [com.jorgeromo.androidbasicsclass.ui.firstpartialpdm1.pickarooHome.model.Product].
  *
  * Notas del backend:
- * - `price` es número → se mapea a `Double`.
- * - El `id` reinicia en 1 en cada sección: NO es único global. La clave real es
+ * `price` es número → se mapea a `Double`.
+ * El `id` reinicia en 1 en cada sección: NO es único global. La clave real es
  *   `section` + `id`.
- * - `description` y `badge` siempre vienen, pero pueden ser `""`.
+ * `description` y `badge` siempre vienen, pero pueden ser `""`.
  */
 
 /**
@@ -138,9 +138,12 @@ data class CafeteriaHomeResponse(
 /**
  * Estado observable de la pantalla de la cafetería. Mismo patrón que
  * [com.jorgeromo.androidbasicsclass.ui.firstpartialpdm1.pickarooHome.model.PickarooHomeUiState].
+ *
+ * @property isRefreshing C02: Indica si se está realizando una recarga mediante Pull-to-Refresh.
  */
 data class CafeteriaHomeUiState(
     val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
     val error: String? = null,
     val shop: Shop? = null,
     val featured: List<FeaturedItem> = emptyList(),

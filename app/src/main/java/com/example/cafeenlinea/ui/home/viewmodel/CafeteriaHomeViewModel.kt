@@ -65,4 +65,46 @@ class CafeteriaHomeViewModel : ViewModel() {
             }
         }
     }
+
+    /**
+     * C02: Recarga el menú mediante el gesto Pull-to-Refresh.
+     * Mantiene los datos visibles y la bandera `isRefreshing = true`.
+     * Si falla, el error se envía al Snackbar y se preserva el menú actual.
+     */
+    fun refreshCafeteriaHome() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isRefreshing = true, error = null) }
+            try {
+                val response = cafeteriaService.getCafeteriaHome()
+                _uiState.update {
+                    it.copy(
+                        isRefreshing = false,
+                        shop = response.shop,
+                        featured = response.featured,
+                        sections = response.sections,
+                        combos = response.combos,
+                        combosNote = response.combosNote,
+                        extras = response.extras
+                    )
+                }
+            } catch (e: HttpException) {
+                _uiState.update {
+                    it.copy(isRefreshing = false, error = "No se pudo actualizar (error ${e.code()})")
+                }
+            } catch (e: SocketTimeoutException) {
+                _uiState.update {
+                    it.copy(isRefreshing = false, error = "El servidor no respondió a tiempo.")
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(isRefreshing = false, error = "Sin conexión para actualizar.")
+                }
+            }
+        }
+    }
+
+    /** C02: Limpia el error para que el Snackbar no vuelva a dispararse en recomposiciones. */
+    fun clearError() {
+        _uiState.update { it.copy(error = null) }
+    }
 }
