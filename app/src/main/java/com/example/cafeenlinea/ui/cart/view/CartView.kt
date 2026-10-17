@@ -15,7 +15,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -31,12 +30,15 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.cafeenlinea.common.components.CafeLoading
 import com.example.cafeenlinea.ui.cart.model.CartItem
 import com.example.cafeenlinea.ui.cart.viewmodel.CartViewModel
 
 /**
  * Pantalla del carrito. Solo dibuja: recibe el [CartViewModel] compartido con
  * el Home, así que refleja en tiempo real lo que se va agregando.
+ *
+ * C03: Sustituye estado de carga al confirmar pedido por animación CafeLoading.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,6 +47,7 @@ fun CartView(
     onCheckout: () -> Unit = {}
 ) {
     val items by cartViewModel.items.collectAsState()
+    val isSubmitting by cartViewModel.isSubmitting.collectAsState()
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Carrito") }) },
@@ -65,11 +68,16 @@ fun CartView(
                     }
                     Button(
                         onClick = onCheckout,
+                        enabled = !isSubmitting,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 12.dp)
                     ) {
-                        Text("Confirmar pedido")
+                        if (isSubmitting) {
+                            CafeLoading(size = 28.dp)
+                        } else {
+                            Text("Confirmar pedido")
+                        }
                     }
                 }
             }
@@ -94,6 +102,7 @@ fun CartView(
                     items(items, key = { it.id }) { item ->
                         CartItemRow(
                             item = item,
+                            enabled = !isSubmitting,
                             onIncrease = { cartViewModel.increaseQuantity(item.id) },
                             onDecrease = { cartViewModel.decreaseQuantity(item.id) },
                             onRemove = { cartViewModel.removeItem(item.id) }
@@ -108,6 +117,7 @@ fun CartView(
 @Composable
 private fun CartItemRow(
     item: CartItem,
+    enabled: Boolean,
     onIncrease: () -> Unit,
     onDecrease: () -> Unit,
     onRemove: () -> Unit
@@ -138,9 +148,13 @@ private fun CartItemRow(
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onDecrease) { Text("–", style = MaterialTheme.typography.titleLarge) }
+                IconButton(onClick = onDecrease, enabled = enabled) {
+                    Text("–", style = MaterialTheme.typography.titleLarge)
+                }
                 Text("${item.quantity}", modifier = Modifier.padding(horizontal = 4.dp))
-                IconButton(onClick = onIncrease) { Text("+", style = MaterialTheme.typography.titleLarge) }
+                IconButton(onClick = onIncrease, enabled = enabled) {
+                    Text("+", style = MaterialTheme.typography.titleLarge)
+                }
             }
         }
     }
