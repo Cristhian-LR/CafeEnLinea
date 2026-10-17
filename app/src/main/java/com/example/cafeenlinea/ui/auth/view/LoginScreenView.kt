@@ -2,6 +2,7 @@ package com.example.cafeenlinea.ui.auth.view
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,12 +39,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-<<<<<<< Updated upstream
-=======
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
->>>>>>> Stashed changes
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -69,13 +68,10 @@ fun LoginScreenView(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var passwordVisible by remember { mutableStateOf(false) }
-<<<<<<< Updated upstream
-=======
 
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val passwordFocusRequester = remember { FocusRequester() }
->>>>>>> Stashed changes
 
     LaunchedEffect(uiState.isLoggedIn) {
         if (uiState.isLoggedIn) onLoginSuccess()
@@ -85,13 +81,10 @@ fun LoginScreenView(
         modifier = Modifier
             .fillMaxSize()
             .background(BgWhite)
-<<<<<<< Updated upstream
-=======
             // C01: Tocar fuera quita foco y oculta teclado
             .pointerInput(Unit) {
                 detectTapGestures(onTap = { focusManager.clearFocus() })
             }
->>>>>>> Stashed changes
     ) {
         Column(
             modifier = Modifier
@@ -226,17 +219,12 @@ fun LoginScreenView(
 
             // --- BOTÓN ENTRAR ---
             Button(
-<<<<<<< Updated upstream
-                onClick = { viewModel.login(username, password) },
-                enabled = !uiState.isLoading,
-=======
                 onClick = {
                     keyboardController?.hide()
                     focusManager.clearFocus()
                     viewModel.login()
                 },
                 enabled = uiState.isButtonEnabled,
->>>>>>> Stashed changes
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Brand,
