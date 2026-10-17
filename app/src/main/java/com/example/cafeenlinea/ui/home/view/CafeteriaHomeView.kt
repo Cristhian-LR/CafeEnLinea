@@ -39,6 +39,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.cafeenlinea.ui.cart.viewmodel.CartViewModel
 import com.example.cafeenlinea.ui.home.model.Shop
 import com.example.cafeenlinea.ui.home.viewmodel.CafeteriaHomeViewModel
 
@@ -61,7 +62,8 @@ import com.example.cafeenlinea.ui.home.viewmodel.CafeteriaHomeViewModel
 @Composable
 fun CafeteriaHomeView(
     onBack: () -> Unit = {},
-    viewModel: CafeteriaHomeViewModel = viewModel()
+    viewModel: CafeteriaHomeViewModel = viewModel(),
+    cartViewModel: CartViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -69,7 +71,6 @@ fun CafeteriaHomeView(
     // C02: Muestra el Snackbar si ocurre un error durante el Pull-to-Refresh y conserva el menú previo
     LaunchedEffect(uiState.error) {
         uiState.error?.let { mensaje ->
-            // Solo muestra Snackbar si ya tenemos contenido en pantalla
             if (uiState.shop != null || uiState.sections.isNotEmpty()) {
                 snackbarHostState.showSnackbar(mensaje)
                 viewModel.clearError()
@@ -80,12 +81,7 @@ fun CafeteriaHomeView(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Cafetería") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar")
-                    }
-                }
+                title = { Text("Cafetería") }
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
@@ -140,7 +136,9 @@ fun CafeteriaHomeView(
                                         contentPadding = PaddingValues(horizontal = 16.dp),
                                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
-                                        items(uiState.featured) { FeaturedCard(it) }
+                                        items(uiState.featured) {
+                                            FeaturedCard(it, cartViewModel = cartViewModel)
+                                        }
                                     }
                                 }
                             }
@@ -171,6 +169,7 @@ fun CafeteriaHomeView(
                                 ) { product ->
                                     MenuItemCard(
                                         product = product,
+                                        cartViewModel = cartViewModel,
                                         modifier = Modifier.padding(horizontal = 16.dp)
                                     )
                                 }
@@ -183,7 +182,9 @@ fun CafeteriaHomeView(
                                         contentPadding = PaddingValues(horizontal = 16.dp),
                                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
-                                        items(uiState.combos) { ComboCard(it) }
+                                        items(uiState.combos) {
+                                            ComboCard(it, cartViewModel = cartViewModel)
+                                        }
                                     }
                                 }
                                 if (uiState.combosNote.isNotBlank()) {
