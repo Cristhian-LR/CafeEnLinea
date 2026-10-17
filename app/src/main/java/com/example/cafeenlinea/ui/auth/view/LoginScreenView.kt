@@ -20,7 +20,6 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -52,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.cafeenlinea.R
+import com.example.cafeenlinea.common.components.CafeLoading
 import com.example.cafeenlinea.ui.auth.viewmodel.LoginViewModel
 
 private val BgWhite = Color(0xFFFFFFFF)
@@ -217,7 +217,7 @@ fun LoginScreenView(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // --- BOTÓN ENTRAR ---
+            // --- BOTÓN INICIAR SESIÓN ---
             Button(
                 onClick = {
                     keyboardController?.hide()
@@ -237,16 +237,13 @@ fun LoginScreenView(
                     .height(50.dp)
             ) {
                 if (uiState.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp,
-                        color = Color.White
-                    )
+                    // C03: Animación Lottie dentro del botón
+                    CafeLoading(size = 28.dp)
                 } else {
                     val buttonText = if (uiState.isLockedOut) {
                         "Bloqueado (${uiState.lockOutSeconds}s)"
                     } else {
-                        "Entrar"
+                        "Iniciar sesión"
                     }
                     Text(buttonText, fontSize = 15.sp, fontWeight = FontWeight.Medium)
                 }
