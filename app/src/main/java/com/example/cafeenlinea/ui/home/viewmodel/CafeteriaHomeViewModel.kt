@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.net.SocketTimeoutException
+import kotlinx.coroutines.delay
 
 /**
  * ViewModel del home de la cafetería. Dueño del estado ([CafeteriaHomeUiState]) y
@@ -37,6 +38,7 @@ class CafeteriaHomeViewModel : ViewModel() {
     fun loadCafeteriaHome() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
+            delay(3000) // C03: Retardo temporal para observar la animación Lottie
             try {
                 val response = cafeteriaService.getCafeteriaHome()
                 _uiState.update {
