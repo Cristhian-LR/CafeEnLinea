@@ -23,11 +23,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +43,21 @@ import com.example.cafeenlinea.ui.cart.viewmodel.CartViewModel
 import com.example.cafeenlinea.ui.home.model.Shop
 import com.example.cafeenlinea.ui.home.viewmodel.CafeteriaHomeViewModel
 
+/**
+ * Pantalla "home" de la cafetería. Solo dibuja: los datos vienen de
+ * [CafeteriaHomeViewModel] (que llama a `GET /api/home/cafeteria/`).
+ *
+ * Estructura:
+ * Encabezado con nombre, lema y banner de promoción.
+ * "Destacados" → carrusel horizontal de [FeaturedCard].
+ * Una sección por categoría del menú (con su nota) → lista vertical de [MenuItemCard].
+ * "Combos" → carrusel horizontal de [ComboCard] + nota general.
+ * "Extras" → lista simple.
+ *
+ * C02: Implementa PullToRefreshBox y manejo de Snackbar ante errores de recarga.
+ *
+ * @param onBack Se dispara al tocar la flecha de la barra superior.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CafeteriaHomeView(
@@ -46,15 +66,25 @@ fun CafeteriaHomeView(
     cartViewModel: CartViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // C02: Muestra el Snackbar si ocurre un error durante el Pull-to-Refresh y conserva el menú previo
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let { mensaje ->
+            if (uiState.shop != null || uiState.sections.isNotEmpty()) {
+                snackbarHostState.showSnackbar(mensaje)
+                viewModel.clearError()
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Cafetería") }
             )
-        }
-
-
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -62,110 +92,130 @@ fun CafeteriaHomeView(
                 .padding(innerPadding)
         ) {
             when {
-                uiState.isLoading -> CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
-                )
-
-                uiState.error != null -> Column(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(uiState.error!!, color = MaterialTheme.colorScheme.error)
-                    Button(onClick = viewModel::loadCafeteriaHome) { Text("Reintentar") }
+                // Carga inicial completa (pantalla en blanco al abrir la app)
+                uiState.isLoading && uiState.shop == null -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center)
+                    )
                 }
 
-                else -> LazyColumn(
-                    contentPadding = PaddingValues(vertical = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    uiState.shop?.let { shop ->
-                        item { ShopHeader(shop) }
+                // Error inicial sin datos previos
+                uiState.error != null && uiState.shop == null -> {
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(uiState.error!!, color = MaterialTheme.colorScheme.error)
+                        Button(onClick = viewModel::loadCafeteriaHome) { Text("Reintentar") }
                     }
+                }
 
-                    if (uiState.featured.isNotEmpty()) {
-                        item { SectionTitle("Destacados") }
-                        item {
-                            LazyRow(
-                                contentPadding = PaddingValues(horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                items(uiState.featured) { FeaturedCard(it, cartViewModel = cartViewModel) }
+                // C02: PullToRefreshBox envolviendo el menú
+                else -> {
+                    PullToRefreshBox(
+                        isRefreshing = uiState.isRefreshing,
+                        onRefresh = { viewModel.refreshCafeteriaHome() },
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(vertical = 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            uiState.shop?.let { shop ->
+                                item { ShopHeader(shop) }
                             }
-                        }
-                    }
 
-                    uiState.sections.forEach { section ->
-                        item(key = "sec_title_${section.name}") {
-                            Column(
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                verticalArrangement = Arrangement.spacedBy(2.dp)
-                            ) {
-                                Text(
-                                    text = section.name,
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                if (section.note.isNotBlank()) {
-                                    Text(
-                                        text = section.note,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                            if (uiState.featured.isNotEmpty()) {
+                                item { SectionTitle("Destacados") }
+                                item {
+                                    LazyRow(
+                                        contentPadding = PaddingValues(horizontal = 16.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        items(uiState.featured) { 
+                                            FeaturedCard(it, cartViewModel = cartViewModel) 
+                                        }
+                                    }
+                                }
+                            }
+
+                            uiState.sections.forEach { section ->
+                                item(key = "sec_title_${section.name}") {
+                                    Column(
+                                        modifier = Modifier.padding(horizontal = 16.dp),
+                                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                                    ) {
+                                        Text(
+                                            text = section.name,
+                                            style = MaterialTheme.typography.titleLarge,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        if (section.note.isNotBlank()) {
+                                            Text(
+                                                text = section.note,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                }
+                                items(
+                                    items = section.products,
+                                    key = { "sec_${section.name}_${it.id}" }
+                                ) { product ->
+                                    MenuItemCard(
+                                        product = product,
+                                        cartViewModel = cartViewModel,
+                                        modifier = Modifier.padding(horizontal = 16.dp)
                                     )
                                 }
                             }
-                        }
-                        items(
-                            items = section.products,
-                            key = { "sec_${section.name}_${it.id}" }
-                        ) { product ->
-                            MenuItemCard(
-                                product = product,
-                                cartViewModel = cartViewModel,
-                                modifier = Modifier.padding(horizontal = 16.dp)
-                            )
-                        }
-                    }
 
-                    if (uiState.combos.isNotEmpty()) {
-                        item { SectionTitle("Combos") }
-                        item {
-                            LazyRow(
-                                contentPadding = PaddingValues(horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                items(uiState.combos) { ComboCard(it, cartViewModel = cartViewModel) }
+                            if (uiState.combos.isNotEmpty()) {
+                                item { SectionTitle("Combos") }
+                                item {
+                                    LazyRow(
+                                        contentPadding = PaddingValues(horizontal = 16.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        items(uiState.combos) { 
+                                            ComboCard(it, cartViewModel = cartViewModel) 
+                                        }
+                                    }
+                                }
+                                if (uiState.combosNote.isNotBlank()) {
+                                    item {
+                                        Text(
+                                            text = uiState.combosNote,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.padding(horizontal = 16.dp)
+                                        )
+                                    }
+                                }
                             }
-                        }
-                        if (uiState.combosNote.isNotBlank()) {
-                            item {
-                                Text(
-                                    text = uiState.combosNote,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(horizontal = 16.dp)
-                                )
-                            }
-                        }
-                    }
 
-                    if (uiState.extras.isNotEmpty()) {
-                        item { SectionTitle("Extras") }
-                        items(uiState.extras, key = { "extra_${it.id}" }) { extra ->
-                            Card(modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth()) {
-                                Row(
-                                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(extra.name, style = MaterialTheme.typography.bodyLarge)
-                                    Text(
-                                        text = extra.priceText,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                            if (uiState.extras.isNotEmpty()) {
+                                item { SectionTitle("Extras") }
+                                items(uiState.extras, key = { "extra_${it.id}" }) { extra ->
+                                    Card(modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth()) {
+                                        Row(
+                                            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(extra.name, style = MaterialTheme.typography.bodyLarge)
+                                            Text(
+                                                text = extra.priceText,
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                color = MaterialTheme.colorScheme.primary,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -176,6 +226,7 @@ fun CafeteriaHomeView(
     }
 }
 
+/** Encabezado con el nombre de la cafetería, su lema y el banner de promoción. */
 @Composable
 private fun ShopHeader(shop: Shop) {
     Column(
@@ -211,6 +262,7 @@ private fun ShopHeader(shop: Shop) {
     }
 }
 
+/** Encabezado de sección dentro del scroll. */
 @Composable
 private fun SectionTitle(text: String) {
     Text(
