@@ -60,4 +60,7 @@ dependencies {
     implementation(libs.okhttp)
     // C03: Lottie Compose
     implementation("com.airbnb.android:lottie-compose:6.4.0")
+    // C10: biometría (BiometricPrompt necesita FragmentActivity)
+    implementation(libs.androidx.biometric)
+    implementation(libs.androidx.fragment.ktx)
 }
