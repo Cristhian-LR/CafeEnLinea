@@ -60,4 +60,5 @@ dependencies {
     implementation(libs.okhttp)
     // C03: Lottie Compose
     implementation("com.airbnb.android:lottie-compose:6.4.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
 }

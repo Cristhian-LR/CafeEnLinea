@@ -42,7 +42,9 @@ import com.example.cafeenlinea.common.components.CafeLoading
 import com.example.cafeenlinea.ui.cart.viewmodel.CartViewModel
 import com.example.cafeenlinea.ui.home.model.Shop
 import com.example.cafeenlinea.ui.home.viewmodel.CafeteriaHomeViewModel
-
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.OutlinedTextField
 /**
  * Pantalla "home" de la cafetería. Solo dibuja: los datos vienen de
  * [CafeteriaHomeViewModel] (que llama a `GET /api/home/cafeteria/`).
@@ -126,6 +128,45 @@ fun CafeteriaHomeView(
                         ) {
                             uiState.shop?.let { shop ->
                                 item { ShopHeader(shop) }
+                            }
+                            // C04: buscador y chips de sección
+                            item {
+                                Column {
+                                    OutlinedTextField(
+                                        value = uiState.searchQuery,
+                                        onValueChange = viewModel::onSearchQueryChange,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp),
+                                        placeholder = { Text("Buscar en el menú") },
+                                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                                        singleLine = true
+                                    )
+                                    LazyRow(
+                                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        items(uiState.sectionNames) { name ->
+                                            FilterChip(
+                                                selected = uiState.selectedSection == name,
+                                                onClick = { viewModel.onSectionSelected(name) },
+                                                label = { Text(name) }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+// C04: mensaje cuando no hay coincidencias
+                            if (uiState.noResults) {
+                                item {
+                                    Text(
+                                        text = "Sin resultados",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(horizontal = 16.dp)
+                                    )
+                                }
                             }
 
                             if (uiState.featured.isNotEmpty()) {
