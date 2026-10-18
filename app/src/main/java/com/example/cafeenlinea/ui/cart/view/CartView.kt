@@ -140,9 +140,33 @@ private fun CartItemRow(
                     .weight(1f)
                     .padding(horizontal = 12.dp)
             ) {
-                Text(item.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
                 Text(
-                    text = item.priceText,
+                    text = item.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                // C05: extras elegidos
+                if (item.extras.isNotEmpty()) {
+                    Text(
+                        text = "+ " + item.extras.joinToString(", ") { it.name },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // C05: nota libre
+                if (item.note.isNotBlank()) {
+                    Text(
+                        text = "Nota: " + item.note,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // C05: precio de una pieza (base + extras)
+                Text(
+                    text = "$" + String.format("%.2f", item.unitPrice),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary
                 )

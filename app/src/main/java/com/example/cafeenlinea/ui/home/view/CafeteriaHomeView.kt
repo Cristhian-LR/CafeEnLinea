@@ -14,13 +14,14 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -31,7 +32,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,25 +45,7 @@ import com.example.cafeenlinea.common.components.CafeLoading
 import com.example.cafeenlinea.ui.cart.viewmodel.CartViewModel
 import com.example.cafeenlinea.ui.home.model.Shop
 import com.example.cafeenlinea.ui.home.viewmodel.CafeteriaHomeViewModel
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.OutlinedTextField
-/**
- * Pantalla "home" de la cafetería. Solo dibuja: los datos vienen de
- * [CafeteriaHomeViewModel] (que llama a `GET /api/home/cafeteria/`).
- *
- * Estructura:
- * Encabezado con nombre, lema y banner de promoción.
- * "Destacados" → carrusel horizontal de [FeaturedCard].
- * Una sección por categoría del menú (con su nota) → lista vertical de [MenuItemCard].
- * "Combos" → carrusel horizontal de [ComboCard] + nota general.
- * "Extras" → lista simple.
- *
- * C02: Implementa PullToRefreshBox y manejo de Snackbar ante errores de recarga.
- * C03: Sustituye el cargador circular por la animación Lottie CafeLoading.
- *
- * @param onBack Se dispara al tocar la flecha de la barra superior.
- */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CafeteriaHomeView(
@@ -70,8 +55,9 @@ fun CafeteriaHomeView(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    var selected by remember { mutableStateOf<DetailTarget?>(null) }
 
-    // C02: Muestra el Snackbar si ocurre un error durante el Pull-to-Refresh y conserva el menú previo
+    // C02: Snackbar si falla la recarga y se conserva el menú previo
     LaunchedEffect(uiState.error) {
         uiState.error?.let { mensaje ->
             if (uiState.shop != null || uiState.sections.isNotEmpty()) {
@@ -95,12 +81,11 @@ fun CafeteriaHomeView(
                 .padding(innerPadding)
         ) {
             when {
-                // C03: Animación Lottie en lugar de CircularProgressIndicator
+                // C03: animación Lottie
                 uiState.isLoading && uiState.shop == null -> {
                     CafeLoading()
                 }
 
-                // Error inicial sin datos previos
                 uiState.error != null && uiState.shop == null -> {
                     Column(
                         modifier = Modifier
@@ -114,7 +99,6 @@ fun CafeteriaHomeView(
                     }
                 }
 
-                // C02: PullToRefreshBox envolviendo el menú
                 else -> {
                     PullToRefreshBox(
                         isRefreshing = uiState.isRefreshing,
@@ -129,6 +113,7 @@ fun CafeteriaHomeView(
                             uiState.shop?.let { shop ->
                                 item { ShopHeader(shop) }
                             }
+
                             // C04: buscador y chips de sección
                             item {
                                 Column {
@@ -139,11 +124,16 @@ fun CafeteriaHomeView(
                                             .fillMaxWidth()
                                             .padding(horizontal = 16.dp),
                                         placeholder = { Text("Buscar en el menú") },
-                                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                                        leadingIcon = {
+                                            Icon(Icons.Default.Search, contentDescription = null)
+                                        },
                                         singleLine = true
                                     )
                                     LazyRow(
-                                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                                        contentPadding = PaddingValues(
+                                            horizontal = 16.dp,
+                                            vertical = 8.dp
+                                        ),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
                                         items(uiState.sectionNames) { name ->
@@ -157,7 +147,7 @@ fun CafeteriaHomeView(
                                 }
                             }
 
-// C04: mensaje cuando no hay coincidencias
+                            // C04: sin coincidencias
                             if (uiState.noResults) {
                                 item {
                                     Text(
@@ -176,8 +166,22 @@ fun CafeteriaHomeView(
                                         contentPadding = PaddingValues(horizontal = 16.dp),
                                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
-                                        items(uiState.featured) {
-                                            FeaturedCard(it, cartViewModel = cartViewModel)
+                                        items(uiState.featured) { featured ->
+                                            FeaturedCard(
+                                                item = featured,
+                                                onClick = {
+                                                    selected = DetailTarget(
+                                                        cartId = "featured_${featured.id}",
+                                                        name = featured.name,
+                                                        description = "",
+                                                        badge = featured.badge,
+                                                        sectionNote = "",
+                                                        price = featured.price,
+                                                        priceText = featured.priceText,
+                                                        image = featured.image
+                                                    )
+                                                }
+                                            )
                                         }
                                     }
                                 }
@@ -209,7 +213,18 @@ fun CafeteriaHomeView(
                                 ) { product ->
                                     MenuItemCard(
                                         product = product,
-                                        cartViewModel = cartViewModel,
+                                        onClick = {
+                                            selected = DetailTarget(
+                                                cartId = "product_${product.section}_${product.id}",
+                                                name = product.name,
+                                                description = product.description,
+                                                badge = product.badge,
+                                                sectionNote = section.note,
+                                                price = product.price,
+                                                priceText = product.priceText,
+                                                image = product.image
+                                            )
+                                        },
                                         modifier = Modifier.padding(horizontal = 16.dp)
                                     )
                                 }
@@ -242,9 +257,15 @@ fun CafeteriaHomeView(
                             if (uiState.extras.isNotEmpty()) {
                                 item { SectionTitle("Extras") }
                                 items(uiState.extras, key = { "extra_${it.id}" }) { extra ->
-                                    Card(modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth()) {
+                                    Card(
+                                        modifier = Modifier
+                                            .padding(horizontal = 16.dp)
+                                            .fillMaxWidth()
+                                    ) {
                                         Row(
-                                            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                                            modifier = Modifier
+                                                .padding(16.dp)
+                                                .fillMaxWidth(),
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
                                             Text(extra.name, style = MaterialTheme.typography.bodyLarge)
@@ -263,6 +284,19 @@ fun CafeteriaHomeView(
                 }
             }
         }
+    }
+
+    // C05: detalle del producto con extras
+    selected?.let { target ->
+        ProductDetailSheet(
+            target = target,
+            extras = uiState.extras,
+            onDismiss = { selected = null },
+            onAdd = { item ->
+                cartViewModel.addItem(item)
+                selected = null
+            }
+        )
     }
 }
 
