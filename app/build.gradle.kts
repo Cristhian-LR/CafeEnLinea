@@ -58,7 +58,14 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation(libs.okhttp)
+    
     // C03: Lottie Compose
     implementation("com.airbnb.android:lottie-compose:6.4.0")
+
+    // Pruebas unitarias de corrutinas
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+
+    // C10: biometría (BiometricPrompt necesita FragmentActivity)
+    implementation(libs.androidx.biometric)
+    implementation(libs.androidx.fragment.ktx)
 }
