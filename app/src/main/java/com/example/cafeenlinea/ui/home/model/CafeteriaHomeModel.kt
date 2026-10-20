@@ -150,5 +150,9 @@ data class CafeteriaHomeUiState(
     val sections: List<CafeteriaSection> = emptyList(),
     val combos: List<Combo> = emptyList(),
     val combosNote: String = "",
-    val extras: List<Extra> = emptyList()
+    val extras: List<Extra> = emptyList(),
+    val searchQuery: String = "",
+    val selectedSection: String? = null,
+    val sectionNames: List<String> = emptyList(),
+    val noResults: Boolean = false
 )

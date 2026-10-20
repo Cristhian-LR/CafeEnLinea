@@ -12,6 +12,10 @@ import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.net.SocketTimeoutException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import com.example.cafeenlinea.ui.home.network.CafeteriaService
 
 /**
  * ViewModel del home de la cafetería. Dueño del estado ([CafeteriaHomeUiState]) y
@@ -20,15 +24,32 @@ import kotlinx.coroutines.delay
  * Mismo patrón que
  * [com.jorgeromo.androidbasicsclass.ui.firstpartialpdm1.pickarooHome.viewmodel.PickarooHomeViewModel].
  */
-class CafeteriaHomeViewModel : ViewModel() {
+class CafeteriaHomeViewModel(
+    private val cafeteriaService: CafeteriaService = CafeteriaRetrofitClient.cafeteriaService
+) : ViewModel() {
 
-    private val cafeteriaService = CafeteriaRetrofitClient.cafeteriaService
-
+    // Datos crudos del servidor (sin filtrar)
     private val _uiState = MutableStateFlow(CafeteriaHomeUiState())
-    val uiState: StateFlow<CafeteriaHomeUiState> = _uiState.asStateFlow()
+    private val _searchQuery = MutableStateFlow("")
+    private val _selectedSection = MutableStateFlow<String?>(null)
+
+    // Lo que ve la UI: datos + búsqueda + sección combinados
+    val uiState: StateFlow<CafeteriaHomeUiState> =
+        combine(_uiState, _searchQuery, _selectedSection) { raw, query, section ->
+            applyFilters(raw, query, section)
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, CafeteriaHomeUiState())
 
     init {
         loadCafeteriaHome()
+    }
+
+    fun onSearchQueryChange(query: String) {
+        _searchQuery.value = query
+    }
+
+    /** Tocar el chip activo lo desactiva. */
+    fun onSectionSelected(name: String?) {
+        _selectedSection.value = if (_selectedSection.value == name) null else name
     }
 
     /**

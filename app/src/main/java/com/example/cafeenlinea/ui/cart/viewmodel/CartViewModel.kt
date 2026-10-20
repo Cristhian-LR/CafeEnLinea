@@ -26,7 +26,7 @@ class CartViewModel : ViewModel() {
             val existing = current.find { it.id == item.id }
             if (existing != null) {
                 current.map {
-                    if (it.id == item.id) it.copy(quantity = it.quantity + 1) else it
+                    if (it.id == item.id) it.copy(quantity = it.quantity + item.quantity) else it
                 }
             } else {
                 current + item
@@ -64,5 +64,5 @@ class CartViewModel : ViewModel() {
     }
 
     /** Total calculado en el momento. */
-    fun currentTotal(): Double = _items.value.sumOf { it.price * it.quantity }
+    fun currentTotal(): Double = _items.value.sumOf { it.lineTotal }
 }

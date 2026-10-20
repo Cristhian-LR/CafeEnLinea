@@ -19,17 +19,16 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.cafeenlinea.ui.cart.model.CartItem
-import com.example.cafeenlinea.ui.cart.viewmodel.CartViewModel
 import com.example.cafeenlinea.ui.home.model.FeaturedItem
 
 @Composable
 fun FeaturedCard(
     item: FeaturedItem,
-    cartViewModel: CartViewModel,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
+        onClick = onClick,
         modifier = modifier.width(240.dp)
     ) {
         Column {
@@ -63,17 +62,7 @@ fun FeaturedCard(
                         fontWeight = FontWeight.Bold
                     )
                     Button(
-                        onClick = {
-                            cartViewModel.addItem(
-                                CartItem(
-                                    id = "featured_${item.id}",
-                                    name = item.name,
-                                    price = item.price,
-                                    priceText = item.priceText,
-                                    image = item.image
-                                )
-                            )
-                        },
+                        onClick = onClick,
                         contentPadding = ButtonDefaults.TextButtonContentPadding
                     ) {
                         Text("Agregar")
