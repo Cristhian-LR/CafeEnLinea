@@ -22,17 +22,15 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.cafeenlinea.ui.cart.model.CartItem
-import com.example.cafeenlinea.ui.cart.viewmodel.CartViewModel
 import com.example.cafeenlinea.ui.home.model.CafeteriaProduct
 
 @Composable
 fun MenuItemCard(
     product: CafeteriaProduct,
-    cartViewModel: CartViewModel,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(modifier = modifier.fillMaxWidth()) {
+    Card(onClick = onClick, modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -73,17 +71,7 @@ fun MenuItemCard(
                     fontWeight = FontWeight.Bold
                 )
                 Button(
-                    onClick = {
-                        cartViewModel.addItem(
-                            CartItem(
-                                id = "product_${product.section}_${product.id}",
-                                name = product.name,
-                                price = product.price,
-                                priceText = product.priceText,
-                                image = product.image
-                            )
-                        )
-                    },
+                    onClick = onClick,
                     contentPadding = ButtonDefaults.TextButtonContentPadding
                 ) {
                     Text("Agregar")

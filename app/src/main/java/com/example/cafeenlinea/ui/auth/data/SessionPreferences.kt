@@ -8,14 +8,17 @@ private const val KEY_ACCESS = "auth_access"
 private const val KEY_REFRESH = "auth_refresh"
 private const val KEY_USERNAME = "auth_username"
 private const val KEY_PHOTO_PATH = "auth_photo_path"
+private const val KEY_BIOMETRIC_ENABLED = "auth_biometric_enabled"
+private const val KEY_BIOMETRIC_OFFERED = "auth_biometric_offered"
 
 /**
  * Expone, con nombres de dominio, la sesión del usuario (tokens JWT + username
- * + foto de perfil). La persistencia real vive en [AppPreferences], igual que
- * OnboardingPreferences.
+ * + foto de perfil) y la preferencia de acceso biométrico. La persistencia real
+ * vive en [AppPreferences], igual que OnboardingPreferences.
  *
- * Nota: se guarda en `SharedPreferences` plano para mantener el estándar del
- * proyecto. Si se quisiera cifrar, el cambio queda aislado en esta clase.
+ * Los tokens se guardan cifrados con [TokenCipher] (Android Keystore). El resto
+ * de la app sigue llamando a [accessToken] / [refreshToken] sin enterarse del
+ * cifrado: el cambio queda aislado en esta clase.
  */
 class SessionPreferences(context: Context) {
 
@@ -23,13 +26,13 @@ class SessionPreferences(context: Context) {
 
     /** Guarda la sesión tras un login correcto. */
     fun saveSession(access: String, refresh: String, user: UserDto) {
-        appPreferences.putString(KEY_ACCESS, access)
-        appPreferences.putString(KEY_REFRESH, refresh)
+        appPreferences.putString(KEY_ACCESS, TokenCipher.encrypt(access))
+        appPreferences.putString(KEY_REFRESH, TokenCipher.encrypt(refresh))
         appPreferences.putString(KEY_USERNAME, user.username)
     }
 
-    fun accessToken(): String? = appPreferences.getString(KEY_ACCESS)
-    fun refreshToken(): String? = appPreferences.getString(KEY_REFRESH)
+    fun accessToken(): String? = appPreferences.getString(KEY_ACCESS)?.let(TokenCipher::decrypt)
+    fun refreshToken(): String? = appPreferences.getString(KEY_REFRESH)?.let(TokenCipher::decrypt)
     fun username(): String? = appPreferences.getString(KEY_USERNAME)
 
     /** Guarda la ruta local del archivo de la foto de perfil. */
@@ -40,11 +43,27 @@ class SessionPreferences(context: Context) {
     /** Ruta local de la foto de perfil, o null si no ha elegido ninguna. */
     fun profilePhotoPath(): String? = appPreferences.getString(KEY_PHOTO_PATH)
 
-    /** Hay sesión si tenemos un refresh token guardado. */
+    /** Hay sesión si tenemos un refresh token guardado (y se puede descifrar). */
     fun isLoggedIn(): Boolean = !refreshToken().isNullOrBlank()
 
-    /** Borra la sesión del dispositivo (logout). */
+    /** true si el usuario eligió entrar con huella o rostro. */
+    fun isBiometricEnabled(): Boolean = appPreferences.getBoolean(KEY_BIOMETRIC_ENABLED)
+
+    fun setBiometricEnabled(enabled: Boolean) {
+        appPreferences.putBoolean(KEY_BIOMETRIC_ENABLED, enabled)
+    }
+
+    /** true si ya se le preguntó al usuario por la biometría (solo se pregunta una vez). */
+    fun wasBiometricOffered(): Boolean = appPreferences.getBoolean(KEY_BIOMETRIC_OFFERED)
+
+    fun markBiometricOffered() {
+        appPreferences.putBoolean(KEY_BIOMETRIC_OFFERED, true)
+    }
+
+    /** Borra la sesión del dispositivo (logout). Sin sesión, la biometría no tiene qué proteger. */
     fun clearSession() {
-        appPreferences.remove(KEY_ACCESS, KEY_REFRESH, KEY_USERNAME, KEY_PHOTO_PATH)
+        appPreferences.remove(
+            KEY_ACCESS, KEY_REFRESH, KEY_USERNAME, KEY_PHOTO_PATH, KEY_BIOMETRIC_ENABLED
+        )
     }
 }

@@ -1,5 +1,5 @@
 package com.example.cafeenlinea.ui.cart.model
-
+import com.example.cafeenlinea.ui.home.model.Extra
 /**
  * Un producto dentro del carrito. Sirve para cualquier tipo de producto del
  * Home (destacado, producto de sección, o combo), por eso solo guarda lo
@@ -15,8 +15,16 @@ package com.example.cafeenlinea.ui.cart.model
 data class CartItem(
     val id: String,
     val name: String,
-    val price: Double,
+    val price: Double,          // precio BASE unitario (sin extras)
     val priceText: String,
     val image: String,
-    val quantity: Int = 1
-)
+    val quantity: Int = 1,
+    val extras: List<Extra> = emptyList(),
+    val note: String = ""
+) {
+    /** Precio de una pieza con sus extras. */
+    val unitPrice: Double get() = price + extras.sumOf { it.price }
+
+    /** (precio base + extras) × cantidad. */
+    val lineTotal: Double get() = unitPrice * quantity
+}

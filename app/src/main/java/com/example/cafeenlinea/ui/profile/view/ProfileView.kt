@@ -61,6 +61,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
+import com.example.cafeenlinea.ui.auth.biometric.BiometricSettingRow
 import com.example.cafeenlinea.ui.auth.data.SessionPreferences
 import com.example.cafeenlinea.ui.profile.data.CloudinaryUploader
 import kotlinx.coroutines.launch
@@ -299,6 +300,8 @@ private fun ProfileMainContent(
                 label = "Aviso de privacidad",
                 onClick = onNavigateToPrivacy
             )
+
+            BiometricSettingRow()
 
             ProfileOptionRow(
                 icon = Icons.Filled.Email,

@@ -17,13 +17,16 @@ class CartViewModel : ViewModel() {
     private val _items = MutableStateFlow<List<CartItem>>(emptyList())
     val items: StateFlow<List<CartItem>> = _items.asStateFlow()
 
+    private val _isSubmitting = MutableStateFlow(false)
+    val isSubmitting: StateFlow<Boolean> = _isSubmitting.asStateFlow()
+
     /** Agrega un producto. Si ya existe (mismo id), solo sube la cantidad. */
     fun addItem(item: CartItem) {
         _items.update { current ->
             val existing = current.find { it.id == item.id }
             if (existing != null) {
                 current.map {
-                    if (it.id == item.id) it.copy(quantity = it.quantity + 1) else it
+                    if (it.id == item.id) it.copy(quantity = it.quantity + item.quantity) else it
                 }
             } else {
                 current + item
@@ -56,6 +59,10 @@ class CartViewModel : ViewModel() {
         _items.update { emptyList() }
     }
 
+    fun setSubmitting(submitting: Boolean) {
+        _isSubmitting.value = submitting
+    }
+
     /** Total calculado en el momento. */
-    fun currentTotal(): Double = _items.value.sumOf { it.price * it.quantity }
+    fun currentTotal(): Double = _items.value.sumOf { it.lineTotal }
 }
