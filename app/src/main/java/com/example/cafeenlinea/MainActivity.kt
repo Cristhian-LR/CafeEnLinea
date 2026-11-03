@@ -5,6 +5,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.fragment.app.FragmentActivity
 import com.example.cafeenlinea.data.remote.ApiClient
+import com.example.cafeenlinea.fcm.SolicitarPermisoFCM
 import com.example.cafeenlinea.ui.auth.data.SessionPreferences
 import com.example.cafeenlinea.ui.navigation.AppNavHost
 import com.example.cafeenlinea.ui.theme.CafeEnLineaTheme
@@ -26,6 +27,9 @@ class MainActivity : FragmentActivity() {
         enableEdgeToEdge()
         setContent {
             CafeEnLineaTheme {
+                // Solicita el permiso POST_NOTIFICATIONS en Android 13+ e imprime el FCM Token en Logcat
+                SolicitarPermisoFCM()
+
                 AppNavHost()
             }
         }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "618098494708",
+    "project_id": "cafeenlinea-d75e6",
+    "storage_bucket": "cafeenlinea-d75e6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:618098494708:android:5df3e867d1a44a8d6362a1",
+        "android_client_info": {
+          "package_name": "com.example.cafeenlinea"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmQdhQimzj2xyfXW8oSonQt4Qx8L99sZE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
