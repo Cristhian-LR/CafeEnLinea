@@ -28,6 +28,9 @@ captures/
 # Generated files
 /generated/
 
+# Notas locales de Claude
+CLAUDE.local.md
+
 # OS files
 .DS_Store
 Thumbs.db
