@@ -2,53 +2,44 @@ package com.example.cafeenlinea.ui.auth.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import com.example.cafeenlinea.data.remote.ApiClient
 import com.example.cafeenlinea.ui.auth.data.SessionPreferences
-import com.example.cafeenlinea.ui.auth.model.LogoutRequest
-import com.example.cafeenlinea.ui.auth.network.AuthRetrofitClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 /**
- * Scope con vida de proceso para la petición "best-effort" de logout. No usamos
- * `viewModelScope` porque al cerrar sesión navegamos y destruimos este ViewModel:
- * eso cancelaría la llamada antes de que el servidor reciba el refresh.
+ * Scope con vida de proceso para la peticion "best-effort" de logout. No usamos
+ * `viewModelScope` porque al cerrar sesion navegamos y destruimos este ViewModel:
+ * eso cancelaria la llamada antes de que el servidor la reciba.
  */
 private val logoutScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
 /**
- * ViewModel para cerrar sesión.
- *
- * Cerrar sesión son dos cosas independientes:
- * 1. Borrar los tokens del dispositivo → se hace SIEMPRE y de inmediato; es lo que
- *    controla la sesión local (con JWT el `access` sigue vivo hasta expirar).
- * 2. Llamar a `/api/auth/logout/` para quemar el `refresh` en el servidor → se hace
- *    en segundo plano, sin bloquear la navegación. Si falla (sin red, 400/401, o el
- *    servidor dormido tardando 60 s), da igual: la sesión local ya se cerró.
+ * Cerrar sesion son dos cosas independientes:
+ * 1. Borrar la sesion del dispositivo -> SIEMPRE y de inmediato.
+ * 2. Avisar al servidor (mutacion `logout`) para borrar la sesion en Redis y que
+ *    el token deje de servir -> en segundo plano. Si falla (sin red, servidor
+ *    dormido, token ya expirado) da igual: la sesion local ya se cerro.
  */
 class LogoutViewModel(application: Application) : AndroidViewModel(application) {
 
     private val session = SessionPreferences(application)
-    private val authService = AuthRetrofitClient.authService
 
-    /**
-     * Cierra la sesión local al instante e invoca [onLoggedOut] (para navegar a
-     * "login"). La invalidación del refresh en el servidor queda corriendo aparte.
-     */
     fun logout(onLoggedOut: () -> Unit) {
-        val access = session.accessToken()
-        val refresh = session.refreshToken()
+        val teniaSesion = ApiClient.token != null
 
         session.clearSession()
         onLoggedOut()
 
-        if (!access.isNullOrBlank() && !refresh.isNullOrBlank()) {
+        if (teniaSesion) {
             logoutScope.launch {
                 try {
-                    authService.logout("Bearer $access", LogoutRequest(refresh))
+                    // Usa el token que sigue en memoria y lo limpia al terminar.
+                    ApiClient.logout()
                 } catch (_: Exception) {
-                    // Best-effort: la sesión local ya se cerró.
+                    // Best-effort: la sesion local ya se cerro.
                 }
             }
         }

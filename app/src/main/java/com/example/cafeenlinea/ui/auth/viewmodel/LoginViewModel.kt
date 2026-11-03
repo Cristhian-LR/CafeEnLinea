@@ -3,11 +3,11 @@ package com.example.cafeenlinea.ui.auth.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.cafeenlinea.data.remote.ApiClient
+import com.example.cafeenlinea.data.remote.ApiException
+import com.example.cafeenlinea.data.remote.SinConexionException
 import com.example.cafeenlinea.ui.auth.data.SessionPreferences
-import com.example.cafeenlinea.ui.auth.model.LoginRequest
-import com.example.cafeenlinea.ui.auth.model.LoginResponse
 import com.example.cafeenlinea.ui.auth.model.LoginUiState
-import com.example.cafeenlinea.ui.auth.network.AuthRetrofitClient
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,13 +15,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import retrofit2.HttpException
-import java.net.SocketTimeoutException
 
+/**
+ * Login contra el backend Node/GraphQL. El campo "usuario" de la pantalla ahora
+ * recibe el CORREO (el servidor identifica a las personas por correo).
+ */
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
     private val session = SessionPreferences(application)
-    private val authService = AuthRetrofitClient.authService
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
@@ -30,18 +31,18 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     private val maxAttempts = 3
     private var lockOutJob: Job? = null
 
-    /** Actualiza el usuario y evalúa su error individual */
+    /** Actualiza el usuario y evalua su error individual */
     fun onUsernameChanged(newUsername: String) {
         _uiState.update { currentState ->
             currentState.copy(
                 usernameText = newUsername,
-                usernameError = if (newUsername.isBlank()) "El usuario es requerido" else null,
+                usernameError = if (newUsername.isBlank()) "El correo es requerido" else null,
                 error = if (currentState.isLockedOut) currentState.error else null
             )
         }
     }
 
-    /** Actualiza la contraseña y evalúa su error individual */
+    /** Actualiza la contrasena y evalua su error individual */
     fun onPasswordChanged(newPassword: String) {
         _uiState.update { currentState ->
             currentState.copy(
@@ -52,14 +53,14 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** Intenta iniciar sesión con reintentos y control de bloqueo */
+    /** Intenta iniciar sesion con control de bloqueo por intentos fallidos */
     fun login(
         username: String = _uiState.value.usernameText,
         password: String = _uiState.value.passwordText
     ) {
         if (_uiState.value.isLockedOut) return
 
-        val uError = if (username.isBlank()) "El usuario es requerido" else null
+        val uError = if (username.isBlank()) "El correo es requerido" else null
         val pError = if (password.isBlank()) "La contraseña es requerida" else null
 
         if (uError != null || pError != null) {
@@ -83,14 +84,23 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                 )
             }
             try {
-                val response = loginWithRetry(LoginRequest(username.trim(), password))
-                session.saveSession(response.access, response.refresh, response.user)
+                val sesion = ApiClient.login(username.trim(), password)
+                session.saveSession(sesion.token, sesion.expiraEn, sesion.usuario)
 
-                // Éxito: reiniciamos el contador de fallos
+                // Exito: reiniciamos el contador de fallos
                 failedAttempts = 0
                 _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
-            } catch (e: HttpException) {
-                if (e.code() == 401) {
+            } catch (e: SinConexionException) {
+                // Sin internet, o Render gratis estaba dormido y no alcanzo a despertar
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = "No se pudo conectar. Si el servidor estaba iniciando, vuelve a intentar."
+                    )
+                }
+            } catch (e: ApiException) {
+                if (e.codigo == "UNAUTHENTICATED") {
+                    // Correo o contrasena incorrectos
                     failedAttempts++
                     if (failedAttempts >= maxAttempts) {
                         startLockOutTimer()
@@ -99,20 +109,16 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                error = "Usuario o contraseña incorrectos. Intentos restantes: $remaining"
+                                error = "Correo o contraseña incorrectos. Intentos restantes: $remaining"
                             )
                         }
                     }
                 } else {
-                    _uiState.update { it.copy(isLoading = false, error = messageForHttp(e.code())) }
-                }
-            } catch (e: SocketTimeoutException) {
-                _uiState.update {
-                    it.copy(isLoading = false, error = "El servidor está iniciando. Vuelve a intentar.")
+                    _uiState.update { it.copy(isLoading = false, error = e.message ?: "Error del servidor") }
                 }
             } catch (e: Exception) {
                 _uiState.update {
-                    it.copy(isLoading = false, error = "Sin conexión. Revisa tu internet e intenta de nuevo.")
+                    it.copy(isLoading = false, error = "No se pudo iniciar sesión. Intenta de nuevo.")
                 }
             }
         }
@@ -148,18 +154,5 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         if (!_uiState.value.isLockedOut) {
             _uiState.update { it.copy(error = null) }
         }
-    }
-
-    private suspend fun loginWithRetry(request: LoginRequest): LoginResponse =
-        try {
-            authService.login(request)
-        } catch (e: SocketTimeoutException) {
-            authService.login(request)
-        }
-
-    private fun messageForHttp(code: Int): String = when (code) {
-        401 -> "Usuario o contraseña incorrectos"
-        400 -> "Revisa los datos ingresados"
-        else -> "No se pudo iniciar sesión (error $code)"
     }
 }

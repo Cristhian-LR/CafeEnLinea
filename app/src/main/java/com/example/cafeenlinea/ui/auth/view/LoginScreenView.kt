@@ -125,7 +125,7 @@ fun LoginScreenView(
             OutlinedTextField(
                 value = uiState.usernameText,
                 onValueChange = { viewModel.onUsernameChanged(it) },
-                label = { Text("Usuario") },
+                label = { Text("Correo") },
                 singleLine = true,
                 enabled = !uiState.isLoading && !uiState.isLockedOut,
                 isError = uiState.usernameError != null,
