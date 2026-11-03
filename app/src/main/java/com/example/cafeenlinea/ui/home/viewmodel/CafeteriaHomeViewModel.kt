@@ -1,39 +1,37 @@
 package com.example.cafeenlinea.ui.home.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.cafeenlinea.data.remote.ApiException
+import com.example.cafeenlinea.data.remote.SesionExpiradaException
+import com.example.cafeenlinea.data.remote.SinConexionException
+import com.example.cafeenlinea.ui.auth.data.SessionPreferences
+import com.example.cafeenlinea.ui.home.model.CafeteriaHomeResponse
 import com.example.cafeenlinea.ui.home.model.CafeteriaHomeUiState
-import com.example.cafeenlinea.ui.home.network.CafeteriaRetrofitClient
+import com.example.cafeenlinea.ui.home.network.CafeteriaRepository
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-import retrofit2.HttpException
-import java.net.SocketTimeoutException
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import com.example.cafeenlinea.ui.home.network.CafeteriaService
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
- * ViewModel del home de la cafetería. Dueño del estado ([CafeteriaHomeUiState]) y
- * de la lógica: llamar a `GET /api/home/cafeteria/` y traducir los errores.
- *
- * Mismo patrón que
- * [com.jorgeromo.androidbasicsclass.ui.firstpartialpdm1.pickarooHome.viewmodel.PickarooHomeViewModel].
+ * ViewModel del home de la cafeteria. Dueno del estado ([CafeteriaHomeUiState]) y
+ * de la logica: pedir el menu a tu servidor (GraphQL) y traducir los errores.
  */
-class CafeteriaHomeViewModel(
-    private val cafeteriaService: CafeteriaService = CafeteriaRetrofitClient.cafeteriaService
-) : ViewModel() {
+class CafeteriaHomeViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val session = SessionPreferences(application)
 
     // Datos crudos del servidor (sin filtrar)
     private val _uiState = MutableStateFlow(CafeteriaHomeUiState())
     private val _searchQuery = MutableStateFlow("")
     private val _selectedSection = MutableStateFlow<String?>(null)
 
-    // Lo que ve la UI: datos + búsqueda + sección combinados
+    // Lo que ve la UI: datos + busqueda + seccion combinados
     val uiState: StateFlow<CafeteriaHomeUiState> =
         combine(_uiState, _searchQuery, _selectedSection) { raw, query, section ->
             applyFilters(raw, query, section)
@@ -52,82 +50,65 @@ class CafeteriaHomeViewModel(
         _selectedSection.value = if (_selectedSection.value == name) null else name
     }
 
-    /**
-     * Pide los datos del home y los vuelca al estado. Cualquier fallo se traduce
-     * a un mensaje legible.
-     */
+    /** Pide el menu y lo vuelca al estado. Cualquier fallo se traduce a un mensaje legible. */
     fun loadCafeteriaHome() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            delay(3000) // C03: Retardo temporal para observar la animación Lottie
             try {
-                val response = cafeteriaService.getCafeteriaHome()
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        shop = response.shop,
-                        featured = response.featured,
-                        sections = response.sections,
-                        combos = response.combos,
-                        combosNote = response.combosNote,
-                        extras = response.extras
-                    )
-                }
-            } catch (e: HttpException) {
-                _uiState.update {
-                    it.copy(isLoading = false, error = "No se pudo cargar (error ${e.code()})")
-                }
-            } catch (e: SocketTimeoutException) {
-                _uiState.update {
-                    it.copy(isLoading = false, error = "El servidor está iniciando. Vuelve a intentar.")
-                }
+                aplicarMenu(pedirMenu())
+                _uiState.update { it.copy(isLoading = false) }
             } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(isLoading = false, error = "Sin conexión. Revisa tu internet e intenta de nuevo.")
-                }
+                _uiState.update { it.copy(isLoading = false, error = mensajeDeError(e, "cargar el menú")) }
             }
         }
     }
 
     /**
-     * C02: Recarga el menú mediante el gesto Pull-to-Refresh.
-     * Mantiene los datos visibles y la bandera `isRefreshing = true`.
-     * Si falla, el error se envía al Snackbar y se preserva el menú actual.
+     * C02: Recarga con Pull-to-Refresh. Mantiene los datos visibles; si falla, el
+     * error va al Snackbar y se conserva el menu actual.
      */
     fun refreshCafeteriaHome() {
         viewModelScope.launch {
             _uiState.update { it.copy(isRefreshing = true, error = null) }
             try {
-                val response = cafeteriaService.getCafeteriaHome()
-                _uiState.update {
-                    it.copy(
-                        isRefreshing = false,
-                        shop = response.shop,
-                        featured = response.featured,
-                        sections = response.sections,
-                        combos = response.combos,
-                        combosNote = response.combosNote,
-                        extras = response.extras
-                    )
-                }
-            } catch (e: HttpException) {
-                _uiState.update {
-                    it.copy(isRefreshing = false, error = "No se pudo actualizar (error ${e.code()})")
-                }
-            } catch (e: SocketTimeoutException) {
-                _uiState.update {
-                    it.copy(isRefreshing = false, error = "El servidor no respondió a tiempo.")
-                }
+                aplicarMenu(pedirMenu())
+                _uiState.update { it.copy(isRefreshing = false) }
             } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(isRefreshing = false, error = "Sin conexión para actualizar.")
-                }
+                _uiState.update { it.copy(isRefreshing = false, error = mensajeDeError(e, "actualizar")) }
             }
         }
     }
 
-    /** C02: Limpia el error para que el Snackbar no vuelva a dispararse en recomposiciones. */
+    /** C02: Limpia el error para que el Snackbar no vuelva a dispararse. */
     fun clearError() {
         _uiState.update { it.copy(error = null) }
+    }
+
+    private suspend fun pedirMenu(): CafeteriaHomeResponse {
+        val cafeteriaId = session.cafeteriaId()
+            ?: throw ApiException("Tu usuario no tiene una cafetería asignada.")
+        return CafeteriaRepository.cargarMenu(cafeteriaId)
+    }
+
+    private fun aplicarMenu(respuesta: CafeteriaHomeResponse) {
+        _uiState.update {
+            it.copy(
+                shop = respuesta.shop,
+                featured = respuesta.featured,
+                sections = respuesta.sections,
+                combos = respuesta.combos,
+                combosNote = respuesta.combosNote,
+                extras = respuesta.extras
+            )
+        }
+    }
+
+    private fun mensajeDeError(e: Exception, accion: String): String = when (e) {
+        is SinConexionException ->
+            "No se pudo conectar. Si el servidor estaba iniciando, vuelve a intentar."
+        is SesionExpiradaException ->
+            "Tu sesión expiró. Cierra sesión desde Perfil e inicia de nuevo."
+        is ApiException -> e.message ?: "Error del servidor"
+        else -> "No se pudo $accion. Intenta de nuevo."
     }
 }

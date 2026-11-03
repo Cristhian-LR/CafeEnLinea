@@ -19,6 +19,7 @@ import com.example.cafeenlinea.ui.main.MainScreen
 import com.example.cafeenlinea.ui.onboarding.data.OnboardingPreferences
 import com.example.cafeenlinea.ui.onboarding.view.OnboardingView
 
+
 object NavRoutes {
     const val ONBOARDING = "onboarding"
     const val LOGIN = "login"
@@ -33,6 +34,7 @@ fun AppNavHost(
     val context = LocalContext.current
     val onboardingPreferences = remember { OnboardingPreferences(context) }
     val sessionPreferences = remember { SessionPreferences(context) }
+
 
     // El candado solo aplica si hay sesión, el usuario lo activó y el teléfono
     // todavía tiene biometría (si borró sus huellas, no se queda atrapado).
