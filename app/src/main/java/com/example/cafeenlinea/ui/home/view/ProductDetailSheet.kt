@@ -44,7 +44,8 @@ data class DetailTarget(
     val sectionNote: String,
     val price: Double,
     val priceText: String,
-    val image: String
+    val image: String,
+    val productId: String = ""
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -140,7 +141,8 @@ fun ProductDetailSheet(
                             image = target.image,
                             quantity = quantity,
                             extras = selectedExtras,
-                            note = note.trim()
+                            note = note.trim(),
+                            productId = target.productId
                         )
                     )
                 },
