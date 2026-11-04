@@ -178,7 +178,8 @@ fun CafeteriaHomeView(
                                                         sectionNote = "",
                                                         price = featured.price,
                                                         priceText = featured.priceText,
-                                                        image = featured.image
+                                                        image = featured.image,
+                                                        productId = featured.productId
                                                     )
                                                 }
                                             )
@@ -222,7 +223,8 @@ fun CafeteriaHomeView(
                                                 sectionNote = section.note,
                                                 price = product.price,
                                                 priceText = product.priceText,
-                                                image = product.image
+                                                image = product.image,
+                                                productId = product.productId
                                             )
                                         },
                                         modifier = Modifier.padding(horizontal = 16.dp)

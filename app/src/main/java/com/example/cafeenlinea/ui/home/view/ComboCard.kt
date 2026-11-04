@@ -67,7 +67,8 @@ fun ComboCard(
                                 name = combo.name,
                                 price = combo.price,
                                 priceText = combo.priceText,
-                                image = combo.image
+                                image = combo.image,
+                                productId = combo.productId
                             )
                         )
                     },
