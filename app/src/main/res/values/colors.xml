@@ -5,6 +5,10 @@
     <color name="green_medium">#FF4A7C59</color>
     <color name="green_light">#FF8DB596</color>
     <color name="green_lightest">#FFD8E9D6</color>
+    <!-- Colores del logo -->
+    <color name="cafe_cream">#FFFFF3C2</color>
+    <color name="cafe_ink">#FF233D00</color>
+    <color name="ic_launcher_background">@color/cafe_cream</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 </resources>

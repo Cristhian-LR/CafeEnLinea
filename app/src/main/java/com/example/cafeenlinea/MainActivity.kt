@@ -3,6 +3,7 @@ package com.example.cafeenlinea
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentActivity
 import com.example.cafeenlinea.data.remote.ApiClient
 import com.example.cafeenlinea.fcm.SolicitarPermisoFCM
@@ -18,6 +19,8 @@ import com.example.cafeenlinea.ui.theme.CafeEnLineaTheme
  */
 class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Debe ir antes de super.onCreate: muestra el splash y luego cambia al tema normal.
+        installSplashScreen()
         super.onCreate(savedInstanceState)
 
         // Si hay una sesión guardada, cargamos su token para que ApiClient lo envíe.

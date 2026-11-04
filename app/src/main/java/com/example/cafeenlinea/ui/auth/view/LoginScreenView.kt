@@ -103,7 +103,7 @@ fun LoginScreenView(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
-                painter = painterResource(id = R.drawable.cafe_express),
+                painter = painterResource(id = R.drawable.logo_cafe),
                 contentDescription = stringResource(R.string.cd_app_logo),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier

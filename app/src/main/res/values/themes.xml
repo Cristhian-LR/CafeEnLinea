@@ -2,4 +2,11 @@
 <resources>
 
     <style name="Theme.CafeEnLinea" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Splash screen: fondo crema y la taza del logo. Al terminar pasa a Theme.CafeEnLinea. -->
+    <style name="Theme.CafeEnLinea.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/cafe_cream</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.CafeEnLinea</item>
+    </style>
 </resources>
