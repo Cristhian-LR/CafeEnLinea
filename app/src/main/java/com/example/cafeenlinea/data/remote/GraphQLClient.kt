@@ -64,6 +64,7 @@ internal interface GraphQLService {
 // Consultas (una sola linea cada una; "\$" es el simbolo $ de GraphQL en Kotlin)
 // ---------------------------------------------------------------------------
 private const val Q_LOGIN = "mutation(\$correo: String!, \$password: String!) { login(correo: \$correo, password: \$password) { token expiraEn usuario { id nombre correo cafeteriaId } } }"
+private const val Q_REGISTRO = "mutation(\$nombre: String!, \$correo: String!, \$password: String!, \$cafeteriaId: ID!) { registro(nombre: \$nombre, correo: \$correo, password: \$password, cafeteriaId: \$cafeteriaId) { token expiraEn usuario { id nombre correo cafeteriaId } } }"
 private const val Q_LOGOUT = "mutation { logout }"
 private const val Q_ME = "query { me { id nombre correo cafeteriaId } }"
 private const val Q_ESCUELAS = "query { escuelas { id clave nombre } }"
@@ -113,6 +114,18 @@ object ApiClient {
         // Tu backend rechaza con 401 CUALQUIER peticion con token invalido, incluso el login.
         token = null
         val sesion: Sesion = ejecutar("login", Q_LOGIN, mapOf("correo" to correo, "password" to password), sesionRequerida = false)
+        token = sesion.token
+        return sesion
+    }
+
+    /** Crea la cuenta y deja la sesion iniciada (el servidor responde igual que en login). */
+    suspend fun registro(nombre: String, correo: String, password: String, cafeteriaId: String): Sesion {
+        token = null
+        val sesion: Sesion = ejecutar(
+            "registro", Q_REGISTRO,
+            mapOf("nombre" to nombre, "correo" to correo, "password" to password, "cafeteriaId" to cafeteriaId),
+            sesionRequerida = false
+        )
         token = sesion.token
         return sesion
     }

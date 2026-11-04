@@ -20,6 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.cafeenlinea.ui.home.model.FeaturedItem
+import androidx.compose.ui.res.stringResource
+import com.example.cafeenlinea.R
 
 @Composable
 fun FeaturedCard(
@@ -65,7 +67,7 @@ fun FeaturedCard(
                         onClick = onClick,
                         contentPadding = ButtonDefaults.TextButtonContentPadding
                     ) {
-                        Text("Agregar")
+                        Text(stringResource(R.string.action_add))
                     }
                 }
             }

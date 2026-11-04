@@ -24,6 +24,9 @@ import com.example.cafeenlinea.ui.cart.view.CartView
 import com.example.cafeenlinea.ui.cart.viewmodel.CartViewModel
 import com.example.cafeenlinea.ui.home.view.CafeteriaHomeView
 import com.example.cafeenlinea.ui.profile.view.ProfileView
+import androidx.compose.ui.res.stringResource
+import com.example.cafeenlinea.R
+import androidx.annotation.StringRes
 
 private object MainRoutes {
     const val HOME = "main_home"
@@ -31,12 +34,12 @@ private object MainRoutes {
     const val PROFILE = "main_profile"
 }
 
-private data class BottomTab(val route: String, val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector)
+private data class BottomTab(val route: String, @StringRes val label: Int, val icon: androidx.compose.ui.graphics.vector.ImageVector)
 
 private val bottomTabs = listOf(
-    BottomTab(MainRoutes.HOME, "Home", Icons.Filled.Home),
-    BottomTab(MainRoutes.CART, "Carrito", Icons.Filled.ShoppingCart),
-    BottomTab(MainRoutes.PROFILE, "Perfil", Icons.Filled.Person)
+    BottomTab(MainRoutes.HOME, R.string.tab_home, Icons.Filled.Home),
+    BottomTab(MainRoutes.CART, R.string.tab_cart, Icons.Filled.ShoppingCart),
+    BottomTab(MainRoutes.PROFILE, R.string.tab_profile, Icons.Filled.Person)
 )
 
 /**
@@ -61,6 +64,7 @@ fun MainScreen(
                 val currentDestination = backStackEntry?.destination
 
                 bottomTabs.forEach { tab ->
+                    val label = stringResource(tab.label)
                     val selected = currentDestination?.hierarchy?.any { it.route == tab.route } == true
                     NavigationBarItem(
                         selected = selected,
@@ -73,8 +77,8 @@ fun MainScreen(
                                 restoreState = true
                             }
                         },
-                        icon = { Icon(tab.icon, contentDescription = tab.label) },
-                        label = { Text(tab.label) }
+                        icon = { Icon(tab.icon, contentDescription = label) },
+                        label = { Text(label) }
                     )
                 }
             }

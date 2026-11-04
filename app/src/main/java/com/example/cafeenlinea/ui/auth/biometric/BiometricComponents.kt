@@ -23,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.cafeenlinea.ui.auth.data.SessionPreferences
+import androidx.compose.ui.res.stringResource
+import com.example.cafeenlinea.R
 
 /**
  * Pregunta, justo después del primer login con contraseña, si se quiere entrar
@@ -37,15 +39,15 @@ fun BiometricOfferDialog(
     AlertDialog(
         onDismissRequest = onDecline,
         icon = { Icon(Icons.Filled.Fingerprint, contentDescription = null) },
-        title = { Text("¿Entrar con huella o rostro?") },
+        title = { Text(stringResource(R.string.biometric_offer_title)) },
         text = {
-            Text("La próxima vez que abras la app podrás entrar sin escribir tu contraseña. Puedes cambiarlo cuando quieras desde tu Perfil.")
+            Text(stringResource(R.string.biometric_offer_text))
         },
         confirmButton = {
-            TextButton(onClick = onAccept) { Text("Activar") }
+            TextButton(onClick = onAccept) { Text(stringResource(R.string.biometric_offer_accept)) }
         },
         dismissButton = {
-            TextButton(onClick = onDecline) { Text("Ahora no") }
+            TextButton(onClick = onDecline) { Text(stringResource(R.string.biometric_offer_decline)) }
         }
     )
 }
@@ -74,8 +76,8 @@ fun BiometricSettingRow() {
         val activity = context.findFragmentActivity() ?: return
         showBiometricPrompt(
             activity = activity,
-            title = "Activar acceso biométrico",
-            subtitle = "Confirma con tu huella o rostro"
+            title = context.getString(R.string.biometric_enable_title),
+            subtitle = context.getString(R.string.biometric_enable_subtitle)
         ) { result ->
             if (result == BiometricResult.Success) {
                 sessionPreferences.setBiometricEnabled(true)
@@ -95,7 +97,7 @@ fun BiometricSettingRow() {
     ) {
         Icon(Icons.Filled.Fingerprint, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
         Text(
-            text = "Entrar con huella o rostro",
+            text = stringResource(R.string.biometric_setting_label),
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.bodyLarge
         )

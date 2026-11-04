@@ -1,0 +1,140 @@
+<resources>
+    <!-- General -->
+    <string name="app_display_name">Café en Línea</string>
+    <string name="cd_app_logo">Café en Línea logo</string>
+    <string name="cd_back">Back</string>
+    <string name="action_add">Add</string>
+    <string name="action_retry">Retry</string>
+    <string name="error_no_connection">Couldn\'t connect. If the server was starting up, try again.</string>
+    <string name="error_server">Server error</string>
+
+    <!-- Login -->
+    <string name="login_tagline">Order ahead, skip the line</string>
+    <string name="login_email_label">Email</string>
+    <string name="login_password_label">Password</string>
+    <string name="cd_show_password">Show password</string>
+    <string name="cd_hide_password">Hide password</string>
+    <string name="login_button">Sign in</string>
+    <string name="login_button_locked">Locked (%1$ds)</string>
+    <string name="login_connecting">Connecting…</string>
+    <string name="login_error_email_required">Email is required</string>
+    <string name="login_error_password_required">Password is required</string>
+    <string name="login_error_fill_required">Fill in the required fields</string>
+    <string name="login_error_wrong_credentials">Wrong email or password. Attempts left: %1$d</string>
+    <string name="login_error_generic">Couldn\'t sign in. Try again.</string>
+    <plurals name="login_error_locked">
+        <item quantity="one">Too many failed attempts. Wait %1$d second.</item>
+        <item quantity="other">Too many failed attempts. Wait %1$d seconds.</item>
+    </plurals>
+
+    <!-- Biometrics -->
+    <string name="biometric_offer_title">Sign in with fingerprint or face?</string>
+    <string name="biometric_offer_text">Next time you open the app you can sign in without typing your password. You can change this anytime from your Profile.</string>
+    <string name="biometric_offer_accept">Turn on</string>
+    <string name="biometric_offer_decline">Not now</string>
+    <string name="biometric_enable_title">Turn on biometric sign-in</string>
+    <string name="biometric_enable_subtitle">Confirm with your fingerprint or face</string>
+    <string name="biometric_setting_label">Sign in with fingerprint or face</string>
+    <string name="biometric_use_password">Use password</string>
+    <string name="biometric_lock_prompt_title">Sign in to Café en Línea</string>
+    <string name="biometric_lock_prompt_subtitle">Use your fingerprint or face</string>
+    <string name="biometric_lock_message">Confirm it\'s you to continue</string>
+    <string name="biometric_lock_button">Use fingerprint or face</string>
+    <string name="biometric_lock_use_password">Sign in with password</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_start">Get started</string>
+    <string name="cd_next">Next</string>
+    <string name="onboarding_welcome_tag">Welcome</string>
+    <string name="onboarding_welcome_title">Welcome to Café en Línea</string>
+    <string name="onboarding_welcome_description">Order your favorite food and snacks from anywhere on campus.</string>
+    <string name="onboarding_orders_tag">Orders</string>
+    <string name="onboarding_orders_title">Order and pay from your phone</string>
+    <string name="onboarding_orders_description">Pick your favorite cafeteria, build your order and pay without leaving the app.</string>
+    <string name="onboarding_pickup_tag">No lines</string>
+    <string name="onboarding_pickup_title">Pick up without waiting in line</string>
+    <string name="onboarding_pickup_description">We\'ll let you know as soon as your order is ready so you just stop by to pick it up.</string>
+
+    <!-- Tabs -->
+    <string name="tab_home">Home</string>
+    <string name="tab_cart">Cart</string>
+    <string name="tab_profile">Profile</string>
+
+    <!-- Home / menu -->
+    <string name="home_title">Cafeteria</string>
+    <string name="home_search_placeholder">Search the menu</string>
+    <string name="home_no_results">No results</string>
+    <string name="home_section_featured">Featured</string>
+    <string name="home_section_combos">Combos</string>
+    <string name="home_section_extras">Extras</string>
+    <string name="home_error_no_cafeteria">Your account has no cafeteria assigned.</string>
+    <string name="home_error_session_expired">Your session expired. Sign out from Profile and sign in again.</string>
+    <string name="home_error_load">Couldn\'t load the menu. Try again.</string>
+    <string name="home_error_refresh">Couldn\'t refresh. Try again.</string>
+
+    <!-- Product detail -->
+    <string name="product_extras">Extras</string>
+    <string name="product_note_label">Note (e.g. no onion)</string>
+    <string name="product_add_to_cart">Add to cart · %1$s</string>
+
+    <!-- Cart -->
+    <string name="cart_title">Cart</string>
+    <string name="cart_total">Total</string>
+    <string name="cart_confirm">Place order</string>
+    <string name="cart_empty">Your cart is empty</string>
+    <string name="cart_item_note">Note: %1$s</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Profile</string>
+    <string name="profile_default_username">User</string>
+    <string name="cd_profile_photo">Profile photo</string>
+    <string name="cd_change_photo">Change photo</string>
+    <string name="profile_take_photo">Take photo</string>
+    <string name="profile_pick_gallery">Choose from gallery</string>
+    <string name="profile_terms">Terms and conditions</string>
+    <string name="profile_privacy">Privacy notice</string>
+    <string name="profile_support_email">Email support</string>
+    <string name="profile_support_whatsapp">WhatsApp support</string>
+    <string name="profile_support_email_subject">CafeEnLinea support</string>
+    <string name="profile_support_whatsapp_message">Hi, I need help with my CafeEnLinea order</string>
+    <string name="profile_logout">Sign out</string>
+    <string name="profile_error_upload">Couldn\'t upload the photo, try again</string>
+    <string name="profile_error_gallery_permission">You need to allow gallery access to choose a photo</string>
+    <string name="profile_error_camera_permission">You need to allow camera access to take a photo</string>
+    <string name="profile_error_no_email_app">No email app is installed</string>
+    <string name="profile_error_no_whatsapp">WhatsApp isn\'t installed</string>
+
+    <string name="terms_body">Last updated: October 2026\n\n1. Use of the service\nCafeEnLinea lets you browse the cafeteria menu and build an order within the platform. Using the app means you accept these terms.\n\n2. Orders\nPrices shown may change without notice. Product availability depends on the cafeteria\'s inventory at the time the order is confirmed.\n\n3. User account\nYou are responsible for keeping your username and password confidential, and for all activity carried out from your account.\n\n4. Privacy\nThe information you provide (name, username) is used only to identify you within the app and manage your orders.\n\n5. Support\nFor questions, complaints or clarifications, you can contact us from the Support section in your profile.\n\n6. Changes to these terms\nThese terms may be updated periodically. We will notify you of relevant changes within the app.</string>
+
+    <string name="privacy_body">Last updated: October 2026\n\n1. Data controller\nCafeEnLinea, as part of an academic project, is responsible for the use of the personal data collected through this app.\n\n2. Data we collect\nWhen you use the app we collect: your username, and the orders you place within the platform (products, quantities and totals).\n\n3. Purpose\nYour data is used only to identify you within the app, manage your session and show your order history.\n\n4. We don\'t share your information\nYour data is not sold, rented or shared with third parties outside this project.\n\n5. Storage\nYour session is stored locally on your device so you don\'t have to sign in every time you open the app.\n\n6. Your rights\nYou can sign out at any time from the Profile section, which deletes the session saved on this device.\n\n7. Contact\nFor questions about how your data is handled, you can write to us from the Support section in your profile.</string>
+
+    <!-- Notifications -->
+    <string name="notification_default_title">Café Express</string>
+    <string name="notification_order_update_title">Order update</string>
+    <string name="notification_order_update_body">You have a new update.</string>
+    <string name="notification_channel_name">Order notifications</string>
+    <string name="notification_channel_description">Alerts about the status of your orders</string>
+    <!-- Sign up -->
+    <string name="login_no_account">Don\'t have an account?</string>
+    <string name="login_go_register">Sign up</string>
+    <string name="register_title">Create account</string>
+    <string name="register_subtitle">Sign up to start ordering</string>
+    <string name="register_name_label">Name</string>
+    <string name="register_confirm_password_label">Confirm password</string>
+    <string name="register_password_hint">At least %1$d characters</string>
+    <string name="register_school_label">School</string>
+    <string name="register_cafeteria_label">Cafeteria</string>
+    <string name="register_button">Create account</string>
+    <string name="register_have_account">Already have an account?</string>
+    <string name="register_go_login">Sign in</string>
+    <string name="register_no_cafeterias">This school has no cafeterias available</string>
+    <string name="register_error_name_required">Name is required</string>
+    <string name="register_error_email_invalid">Enter a valid email</string>
+    <string name="register_error_password_short">Password must be at least %1$d characters</string>
+    <string name="register_error_password_mismatch">Passwords don\'t match</string>
+    <string name="register_error_cafeteria_required">Choose your school and cafeteria</string>
+    <string name="register_error_email_taken">An account with this email already exists</string>
+    <string name="register_error_generic">Couldn\'t create the account. Try again.</string>
+    <string name="register_error_catalogs">Couldn\'t load schools and cafeterias.</string>
+</resources>

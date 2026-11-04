@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.example.cafeenlinea.R
+import androidx.annotation.StringRes
 
 /**
  * Login contra el backend Node/GraphQL. El campo "usuario" de la pantalla ahora
@@ -27,6 +29,9 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
+    private fun str(@StringRes id: Int, vararg args: Any): String =
+        getApplication<Application>().getString(id, *args)
+
     private var failedAttempts = 0
     private val maxAttempts = 3
     private var lockOutJob: Job? = null
@@ -36,7 +41,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.update { currentState ->
             currentState.copy(
                 usernameText = newUsername,
-                usernameError = if (newUsername.isBlank()) "El correo es requerido" else null,
+                usernameError = if (newUsername.isBlank()) str(R.string.login_error_email_required) else null,
                 error = if (currentState.isLockedOut) currentState.error else null
             )
         }
@@ -47,7 +52,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.update { currentState ->
             currentState.copy(
                 passwordText = newPassword,
-                passwordError = if (newPassword.isBlank()) "La contraseña es requerida" else null,
+                passwordError = if (newPassword.isBlank()) str(R.string.login_error_password_required) else null,
                 error = if (currentState.isLockedOut) currentState.error else null
             )
         }
@@ -60,15 +65,15 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     ) {
         if (_uiState.value.isLockedOut) return
 
-        val uError = if (username.isBlank()) "El correo es requerido" else null
-        val pError = if (password.isBlank()) "La contraseña es requerida" else null
+        val uError = if (username.isBlank()) str(R.string.login_error_email_required) else null
+        val pError = if (password.isBlank()) str(R.string.login_error_password_required) else null
 
         if (uError != null || pError != null) {
             _uiState.update {
                 it.copy(
                     usernameError = uError,
                     passwordError = pError,
-                    error = "Completa los campos requeridos"
+                    error = str(R.string.login_error_fill_required)
                 )
             }
             return
@@ -95,7 +100,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        error = "No se pudo conectar. Si el servidor estaba iniciando, vuelve a intentar."
+                        error = str(R.string.error_no_connection)
                     )
                 }
             } catch (e: ApiException) {
@@ -109,16 +114,16 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                error = "Correo o contraseña incorrectos. Intentos restantes: $remaining"
+                                error = str(R.string.login_error_wrong_credentials, remaining)
                             )
                         }
                     }
                 } else {
-                    _uiState.update { it.copy(isLoading = false, error = e.message ?: "Error del servidor") }
+                    _uiState.update { it.copy(isLoading = false, error = e.message ?: str(R.string.error_server)) }
                 }
             } catch (e: Exception) {
                 _uiState.update {
-                    it.copy(isLoading = false, error = "No se pudo iniciar sesión. Intenta de nuevo.")
+                    it.copy(isLoading = false, error = str(R.string.login_error_generic))
                 }
             }
         }
@@ -134,7 +139,8 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                         isLoading = false,
                         isLockedOut = true,
                         lockOutSeconds = seconds,
-                        error = "Demasiados intentos fallidos. Espera $seconds segundos."
+                        error = getApplication<Application>().resources
+                            .getQuantityString(R.plurals.login_error_locked, seconds, seconds)
                     )
                 }
                 delay(1000)
