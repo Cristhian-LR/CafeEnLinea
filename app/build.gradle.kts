@@ -62,6 +62,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation(libs.okhttp)
+    implementation("io.noties.markwon:core:4.6.2")
     
     // C03: Lottie Compose
     implementation("com.airbnb.android:lottie-compose:6.4.0")
