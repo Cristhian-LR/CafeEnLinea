@@ -1,3 +1,142 @@
 <resources>
     <string name="app_name">CafeEnLinea</string>
+
+    <!-- General -->
+    <string name="app_display_name">Café en Línea</string>
+    <string name="cd_app_logo">Logo de Café en Línea</string>
+    <string name="cd_back">Regresar</string>
+    <string name="action_add">Agregar</string>
+    <string name="action_retry">Reintentar</string>
+    <string name="error_no_connection">No se pudo conectar. Si el servidor estaba iniciando, vuelve a intentar.</string>
+    <string name="error_server">Error del servidor</string>
+
+    <!-- Login -->
+    <string name="login_tagline">Pide antes, recoge sin fila</string>
+    <string name="login_email_label">Correo electrónico</string>
+    <string name="login_password_label">Contraseña</string>
+    <string name="cd_show_password">Mostrar contraseña</string>
+    <string name="cd_hide_password">Ocultar contraseña</string>
+    <string name="login_button">Iniciar sesión</string>
+    <string name="login_button_locked">Bloqueado (%1$ds)</string>
+    <string name="login_connecting">Conectando…</string>
+    <string name="login_error_email_required">El correo es requerido</string>
+    <string name="login_error_password_required">La contraseña es requerida</string>
+    <string name="login_error_fill_required">Completa los campos requeridos</string>
+    <string name="login_error_wrong_credentials">Correo o contraseña incorrectos. Intentos restantes: %1$d</string>
+    <string name="login_error_generic">No se pudo iniciar sesión. Intenta de nuevo.</string>
+    <plurals name="login_error_locked">
+        <item quantity="one">Demasiados intentos fallidos. Espera %1$d segundo.</item>
+        <item quantity="other">Demasiados intentos fallidos. Espera %1$d segundos.</item>
+    </plurals>
+
+    <!-- Biometría -->
+    <string name="biometric_offer_title">¿Entrar con huella o rostro?</string>
+    <string name="biometric_offer_text">La próxima vez que abras la app podrás entrar sin escribir tu contraseña. Puedes cambiarlo cuando quieras desde tu Perfil.</string>
+    <string name="biometric_offer_accept">Activar</string>
+    <string name="biometric_offer_decline">Ahora no</string>
+    <string name="biometric_enable_title">Activar acceso biométrico</string>
+    <string name="biometric_enable_subtitle">Confirma con tu huella o rostro</string>
+    <string name="biometric_setting_label">Entrar con huella o rostro</string>
+    <string name="biometric_use_password">Usar contraseña</string>
+    <string name="biometric_lock_prompt_title">Entrar a Café en Línea</string>
+    <string name="biometric_lock_prompt_subtitle">Usa tu huella o rostro</string>
+    <string name="biometric_lock_message">Confirma que eres tú para continuar</string>
+    <string name="biometric_lock_button">Usar huella o rostro</string>
+    <string name="biometric_lock_use_password">Entrar con contraseña</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_skip">Omitir</string>
+    <string name="onboarding_start">Comenzar</string>
+    <string name="cd_next">Siguiente</string>
+    <string name="onboarding_welcome_tag">Bienvenida</string>
+    <string name="onboarding_welcome_title">Bienvenido a Café en Línea</string>
+    <string name="onboarding_welcome_description">Ordena tu comida y snacks favoritos desde cualquier punto del campus.</string>
+    <string name="onboarding_orders_tag">Pedidos</string>
+    <string name="onboarding_orders_title">Ordena y paga desde tu celular</string>
+    <string name="onboarding_orders_description">Elige tu cafetería favorita, arma tu pedido y paga sin salir de la app.</string>
+    <string name="onboarding_pickup_tag">Sin filas</string>
+    <string name="onboarding_pickup_title">Recoge sin hacer fila</string>
+    <string name="onboarding_pickup_description">Te avisamos en cuanto tu pedido esté listo para que solo pases a recogerlo.</string>
+
+    <!-- Pestañas -->
+    <string name="tab_home">Home</string>
+    <string name="tab_cart">Carrito</string>
+    <string name="tab_profile">Perfil</string>
+
+    <!-- Home / menú -->
+    <string name="home_title">Cafetería</string>
+    <string name="home_search_placeholder">Buscar en el menú</string>
+    <string name="home_no_results">Sin resultados</string>
+    <string name="home_section_featured">Destacados</string>
+    <string name="home_section_combos">Combos</string>
+    <string name="home_section_extras">Extras</string>
+    <string name="home_error_no_cafeteria">Tu usuario no tiene una cafetería asignada.</string>
+    <string name="home_error_session_expired">Tu sesión expiró. Cierra sesión desde Perfil e inicia de nuevo.</string>
+    <string name="home_error_load">No se pudo cargar el menú. Intenta de nuevo.</string>
+    <string name="home_error_refresh">No se pudo actualizar. Intenta de nuevo.</string>
+
+    <!-- Detalle de producto -->
+    <string name="product_extras">Extras</string>
+    <string name="product_note_label">Nota (ej. sin cebolla)</string>
+    <string name="product_add_to_cart">Agregar al carrito · %1$s</string>
+
+    <!-- Carrito -->
+    <string name="cart_title">Carrito</string>
+    <string name="cart_total">Total</string>
+    <string name="cart_confirm">Confirmar pedido</string>
+    <string name="cart_empty">Tu carrito está vacío</string>
+    <string name="cart_item_note">Nota: %1$s</string>
+
+    <!-- Perfil -->
+    <string name="profile_title">Perfil</string>
+    <string name="profile_default_username">Usuario</string>
+    <string name="cd_profile_photo">Foto de perfil</string>
+    <string name="cd_change_photo">Cambiar foto</string>
+    <string name="profile_take_photo">Tomar foto</string>
+    <string name="profile_pick_gallery">Elegir de galería</string>
+    <string name="profile_terms">Términos y condiciones</string>
+    <string name="profile_privacy">Aviso de privacidad</string>
+    <string name="profile_support_email">Soporte por correo</string>
+    <string name="profile_support_whatsapp">Soporte por WhatsApp</string>
+    <string name="profile_support_email_subject">Soporte CafeEnLinea</string>
+    <string name="profile_support_whatsapp_message">Hola, necesito ayuda con mi pedido en CafeEnLinea</string>
+    <string name="profile_logout">Cerrar sesión</string>
+    <string name="profile_error_upload">No se pudo subir la foto, intenta de nuevo</string>
+    <string name="profile_error_gallery_permission">Necesitas dar permiso de galería para elegir la foto</string>
+    <string name="profile_error_camera_permission">Necesitas dar permiso de cámara para tomar la foto</string>
+    <string name="profile_error_no_email_app">No hay una app de correo instalada</string>
+    <string name="profile_error_no_whatsapp">WhatsApp no está instalado</string>
+
+    <string name="terms_body">Última actualización: octubre 2026\n\n1. Uso del servicio\nCafeEnLinea permite consultar el menú de la cafetería y armar un pedido dentro de la plataforma. El uso de la app implica la aceptación de estos términos.\n\n2. Pedidos\nLos precios mostrados pueden cambiar sin previo aviso. La disponibilidad de los productos depende del inventario de la cafetería al momento de confirmar el pedido.\n\n3. Cuenta de usuario\nEres responsable de mantener la confidencialidad de tu usuario y contraseña, así como de toda actividad realizada desde tu cuenta.\n\n4. Privacidad\nLa información que proporcionas (nombre, usuario) se usa únicamente para identificarte dentro de la app y gestionar tus pedidos.\n\n5. Soporte\nPara dudas, quejas o aclaraciones, puedes contactarnos desde la sección de Soporte en tu perfil.\n\n6. Cambios en estos términos\nEstos términos pueden actualizarse periódicamente. Te notificaremos los cambios relevantes dentro de la app.</string>
+
+    <string name="privacy_body">Última actualización: octubre 2026\n\n1. Responsable del tratamiento de datos\nCafeEnLinea, como parte de un proyecto académico, es responsable del uso de los datos personales que se recaban a través de esta app.\n\n2. Datos que recabamos\nAl usar la app recabamos: nombre de usuario, y los pedidos que realizas dentro de la plataforma (productos, cantidades y totales).\n\n3. Finalidad\nTus datos se usan únicamente para identificarte dentro de la app, gestionar tu sesión y mostrarte tu historial de pedidos.\n\n4. No compartimos tu información\nTus datos no se venden, rentan ni comparten con terceros ajenos a este proyecto.\n\n5. Almacenamiento\nTu sesión se guarda localmente en tu dispositivo para que no tengas que iniciar sesión cada vez que abres la app.\n\n6. Tus derechos\nPuedes cerrar sesión en cualquier momento desde la sección de Perfil, lo cual elimina tu sesión guardada en este dispositivo.\n\n7. Contacto\nPara dudas sobre el manejo de tus datos, puedes escribirnos desde la sección de Soporte en tu perfil.</string>
+
+    <!-- Notificaciones -->
+    <string name="notification_default_title">Café Express</string>
+    <string name="notification_order_update_title">Actualización de Pedido</string>
+    <string name="notification_order_update_body">Tienes una nueva actualización.</string>
+    <string name="notification_channel_name">Notificaciones de Pedidos</string>
+    <string name="notification_channel_description">Avisos sobre el estado de los pedidos</string>
+    <!-- Registro -->
+    <string name="login_no_account">¿No tienes cuenta?</string>
+    <string name="login_go_register">Regístrate</string>
+    <string name="register_title">Crear cuenta</string>
+    <string name="register_subtitle">Regístrate para empezar a pedir</string>
+    <string name="register_name_label">Nombre</string>
+    <string name="register_confirm_password_label">Confirmar contraseña</string>
+    <string name="register_password_hint">Mínimo %1$d caracteres</string>
+    <string name="register_school_label">Escuela</string>
+    <string name="register_cafeteria_label">Cafetería</string>
+    <string name="register_button">Crear cuenta</string>
+    <string name="register_have_account">¿Ya tienes cuenta?</string>
+    <string name="register_go_login">Inicia sesión</string>
+    <string name="register_no_cafeterias">Esta escuela no tiene cafeterías disponibles</string>
+    <string name="register_error_name_required">El nombre es requerido</string>
+    <string name="register_error_email_invalid">Escribe un correo válido</string>
+    <string name="register_error_password_short">La contraseña debe tener al menos %1$d caracteres</string>
+    <string name="register_error_password_mismatch">Las contraseñas no coinciden</string>
+    <string name="register_error_cafeteria_required">Elige tu escuela y tu cafetería</string>
+    <string name="register_error_email_taken">Ya existe una cuenta con este correo</string>
+    <string name="register_error_generic">No se pudo crear la cuenta. Intenta de nuevo.</string>
+    <string name="register_error_catalogs">No se pudieron cargar las escuelas y cafeterías.</string>
 </resources>

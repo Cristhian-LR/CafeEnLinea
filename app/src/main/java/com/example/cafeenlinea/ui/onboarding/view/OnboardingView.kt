@@ -80,6 +80,8 @@ import com.example.cafeenlinea.ui.theme.GreenDarkest
 import com.example.cafeenlinea.ui.theme.GreenLightest
 import com.example.cafeenlinea.ui.theme.GreenMedium
 import kotlin.math.absoluteValue
+import androidx.compose.ui.res.stringResource
+import com.example.cafeenlinea.R
 
 /** Altura reservada para los controles inferiores, para que el texto no quede debajo. */
 private val BottomControlsHeight = 112.dp
@@ -200,7 +202,7 @@ private fun OnboardingTopBar(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Café en Línea",
+                text = stringResource(R.string.app_display_name),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.White
@@ -212,7 +214,7 @@ private fun OnboardingTopBar(
                 onClick = onSkip,
                 colors = ButtonDefaults.textButtonColors(contentColor = GreenLightest)
             ) {
-                Text("Omitir", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.onboarding_skip), style = MaterialTheme.typography.labelLarge)
             }
         }
     }
@@ -247,7 +249,7 @@ private fun OnboardingPageContent(page: OnboardingPage, pageOffset: Float) {
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             ) {
                 Text(
-                    text = page.tag.uppercase(),
+                    text = stringResource(page.tag).uppercase(),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold,
                     letterSpacing = 1.2.sp,
@@ -258,7 +260,7 @@ private fun OnboardingPageContent(page: OnboardingPage, pageOffset: Float) {
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = page.title,
+                text = stringResource(page.title),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
@@ -267,7 +269,7 @@ private fun OnboardingPageContent(page: OnboardingPage, pageOffset: Float) {
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = page.description,
+                text = stringResource(page.description),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -356,7 +358,7 @@ private fun HeroIllustration(page: OnboardingPage) {
         ) {
             Icon(
                 imageVector = page.icon,
-                contentDescription = page.title,
+                contentDescription = stringResource(page.title),
                 tint = GreenDarkest,
                 modifier = Modifier.size(64.dp)
             )
@@ -428,7 +430,7 @@ private fun OnboardingBottomControls(
                     contentPadding = PaddingValues(horizontal = 28.dp),
                     modifier = Modifier.height(56.dp)
                 ) {
-                    Text("Comenzar", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.onboarding_start), style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.width(8.dp))
                     Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
                 }
@@ -477,7 +479,7 @@ private fun ProgressNextButton(progress: Float, onClick: () -> Unit) {
             strokeCap = StrokeCap.Round
         )
         FilledIconButton(onClick = onClick, modifier = Modifier.size(56.dp)) {
-            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Siguiente")
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = stringResource(R.string.cd_next))
         }
     }
 }

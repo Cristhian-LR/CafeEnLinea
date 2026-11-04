@@ -20,6 +20,8 @@ import coil.compose.AsyncImage
 import com.example.cafeenlinea.ui.cart.model.CartItem
 import com.example.cafeenlinea.ui.cart.viewmodel.CartViewModel
 import com.example.cafeenlinea.ui.home.model.Combo
+import androidx.compose.ui.res.stringResource
+import com.example.cafeenlinea.R
 
 @Composable
 fun ComboCard(
@@ -75,7 +77,7 @@ fun ComboCard(
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = ButtonDefaults.TextButtonContentPadding
                 ) {
-                    Text("Agregar")
+                    Text(stringResource(R.string.action_add))
                 }
             }
         }

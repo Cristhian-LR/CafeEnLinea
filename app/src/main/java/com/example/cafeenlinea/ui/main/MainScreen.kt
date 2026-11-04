@@ -36,6 +36,9 @@ import com.example.cafeenlinea.ui.home.view.CafeteriaHomeView
 import com.example.cafeenlinea.ui.orders.view.OrdersView
 import com.example.cafeenlinea.ui.orders.viewmodel.OrdersViewModel
 import com.example.cafeenlinea.ui.profile.view.ProfileView
+import androidx.compose.ui.res.stringResource
+import com.example.cafeenlinea.R
+import androidx.annotation.StringRes
 
 private object MainRoutes {
     const val HOME = "main_home"
@@ -44,13 +47,13 @@ private object MainRoutes {
     const val PROFILE = "main_profile"
 }
 
-private data class BottomTab(val route: String, val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector)
+private data class BottomTab(val route: String, @StringRes val label: Int, val icon: androidx.compose.ui.graphics.vector.ImageVector)
 
 private val bottomTabs = listOf(
-    BottomTab(MainRoutes.HOME, "Home", Icons.Filled.Home),
-    BottomTab(MainRoutes.CART, "Carrito", Icons.Filled.ShoppingCart),
-    BottomTab(MainRoutes.ORDERS, "Pedidos", Icons.AutoMirrored.Filled.ReceiptLong),
-    BottomTab(MainRoutes.PROFILE, "Perfil", Icons.Filled.Person)
+    BottomTab(MainRoutes.HOME, R.string.tab_home, Icons.Filled.Home),
+    BottomTab(MainRoutes.CART, R.string.tab_cart, Icons.Filled.ShoppingCart),
+    BottomTab(MainRoutes.ORDERS, R.string.tab_orders, Icons.AutoMirrored.Filled.ReceiptLong),
+    BottomTab(MainRoutes.PROFILE, R.string.tab_profile, Icons.Filled.Person)
 )
 
 /** Cambia de tab conservando el estado de cada uno. */
@@ -110,12 +113,13 @@ fun MainScreen(
                 val currentDestination = backStackEntry?.destination
 
                 bottomTabs.forEach { tab ->
+                    val label = stringResource(tab.label)
                     val selected = currentDestination?.hierarchy?.any { it.route == tab.route } == true
                     NavigationBarItem(
                         selected = selected,
                         onClick = { innerNavController.navigateToTab(tab.route) },
-                        icon = { Icon(tab.icon, contentDescription = tab.label) },
-                        label = { Text(tab.label) }
+                        icon = { Icon(tab.icon, contentDescription = label) },
+                        label = { Text(label) }
                     )
                 }
             }

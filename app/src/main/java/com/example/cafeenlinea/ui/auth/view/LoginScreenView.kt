@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -45,6 +46,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -53,6 +55,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.cafeenlinea.R
 import com.example.cafeenlinea.common.components.CafeLoading
 import com.example.cafeenlinea.ui.auth.viewmodel.LoginViewModel
+import androidx.compose.ui.res.stringResource
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.TextButton
 
 private val BgWhite = Color(0xFFFFFFFF)
 private val Ink = Color(0xFF1B3A2B)
@@ -61,9 +66,13 @@ private val Muted = Color(0xFF8DB596)
 private val HairlineBorder = Color(0xFFE3E7E4)
 private val ErrorRed = Color(0xFFC1443A)
 
+/** Espacio entre los puntos de la contraseña oculta. Más negativo = más juntos. */
+internal val PasswordDotSpacing = (-1).sp
+
 @Composable
 fun LoginScreenView(
     onLoginSuccess: () -> Unit,
+    onNavigateToRegister: () -> Unit,
     viewModel: LoginViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -95,7 +104,7 @@ fun LoginScreenView(
         ) {
             Image(
                 painter = painterResource(id = R.drawable.cafe_express),
-                contentDescription = "Logo de Café en Línea",
+                contentDescription = stringResource(R.string.cd_app_logo),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(56.dp)
@@ -105,7 +114,7 @@ fun LoginScreenView(
             Spacer(modifier = Modifier.height(28.dp))
 
             Text(
-                text = "Café en Línea",
+                text = stringResource(R.string.app_display_name),
                 color = Ink,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 24.sp
@@ -114,7 +123,7 @@ fun LoginScreenView(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "Pide antes, recoge sin fila",
+                text = stringResource(R.string.login_tagline),
                 color = Muted,
                 fontSize = 14.sp
             )
@@ -125,7 +134,7 @@ fun LoginScreenView(
             OutlinedTextField(
                 value = uiState.usernameText,
                 onValueChange = { viewModel.onUsernameChanged(it) },
-                label = { Text("Correo") },
+                label = { Text(stringResource(R.string.login_email_label)) },
                 singleLine = true,
                 enabled = !uiState.isLoading && !uiState.isLockedOut,
                 isError = uiState.usernameError != null,
@@ -134,7 +143,11 @@ fun LoginScreenView(
                         Text(text = err, color = ErrorRed, fontSize = 12.sp)
                     }
                 },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    autoCorrectEnabled = false,
+                    imeAction = ImeAction.Next
+                ),
                 keyboardActions = KeyboardActions(
                     onNext = { passwordFocusRequester.requestFocus() }
                 ),
@@ -155,7 +168,7 @@ fun LoginScreenView(
             OutlinedTextField(
                 value = uiState.passwordText,
                 onValueChange = { viewModel.onPasswordChanged(it) },
-                label = { Text("Contraseña") },
+                label = { Text(stringResource(R.string.login_password_label)) },
                 singleLine = true,
                 enabled = !uiState.isLoading && !uiState.isLockedOut,
                 isError = uiState.passwordError != null,
@@ -164,7 +177,11 @@ fun LoginScreenView(
                         Text(text = err, color = ErrorRed, fontSize = 12.sp)
                     }
                 },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    autoCorrectEnabled = false,
+                    imeAction = ImeAction.Done
+                ),
                 keyboardActions = KeyboardActions(
                     onDone = {
                         keyboardController?.hide()
@@ -182,6 +199,12 @@ fun LoginScreenView(
                     cursorColor = Brand,
                     errorBorderColor = ErrorRed
                 ),
+                // Los puntos ocultos se veían muy separados por el letterSpacing del tema.
+                textStyle = if (passwordVisible) {
+                    LocalTextStyle.current
+                } else {
+                    LocalTextStyle.current.copy(letterSpacing = PasswordDotSpacing)
+                },
                 visualTransformation = if (passwordVisible) {
                     VisualTransformation.None
                 } else {
@@ -195,7 +218,7 @@ fun LoginScreenView(
                             } else {
                                 Icons.Filled.Visibility
                             },
-                            contentDescription = if (passwordVisible) "Ocultar" else "Mostrar",
+                            contentDescription = if (passwordVisible) stringResource(R.string.cd_hide_password) else stringResource(R.string.cd_show_password),
                             tint = Muted
                         )
                     }
@@ -241,18 +264,28 @@ fun LoginScreenView(
                     CafeLoading(size = 28.dp)
                 } else {
                     val buttonText = if (uiState.isLockedOut) {
-                        "Bloqueado (${uiState.lockOutSeconds}s)"
+                        stringResource(R.string.login_button_locked, uiState.lockOutSeconds)
                     } else {
-                        "Iniciar sesión"
+                        stringResource(R.string.login_button)
                     }
                     Text(buttonText, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                }
+            }
+
+            if (!uiState.isLoading) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(stringResource(R.string.login_no_account), color = Muted, fontSize = 14.sp)
+                    TextButton(onClick = onNavigateToRegister) {
+                        Text(stringResource(R.string.login_go_register), color = Brand, fontWeight = FontWeight.Medium)
+                    }
                 }
             }
 
             if (uiState.isLoading) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = "Conectando…",
+                    text = stringResource(R.string.login_connecting),
                     fontSize = 12.sp,
                     color = Muted
                 )
