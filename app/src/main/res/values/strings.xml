@@ -62,6 +62,7 @@
     <string name="tab_home">Home</string>
     <string name="tab_cart">Carrito</string>
     <string name="tab_profile">Perfil</string>
+    <string name="tab_orders">Pedidos</string>
 
     <!-- Home / menú -->
     <string name="home_title">Cafetería</string>
