@@ -18,11 +18,13 @@ import com.example.cafeenlinea.ui.auth.view.LoginScreenView
 import com.example.cafeenlinea.ui.main.MainScreen
 import com.example.cafeenlinea.ui.onboarding.data.OnboardingPreferences
 import com.example.cafeenlinea.ui.onboarding.view.OnboardingView
+import com.example.cafeenlinea.ui.auth.view.RegisterScreenView
 
 
 object NavRoutes {
     const val ONBOARDING = "onboarding"
     const val LOGIN = "login"
+    const val REGISTER = "register"
     const val BIOMETRIC_LOCK = "biometric_lock"
     const val HOME = "home"
 }
@@ -76,37 +78,28 @@ fun AppNavHost(
             )
         }
 
+        // Login y registro terminan igual: ofrecer biometría (una vez) y entrar al Home.
+        // popUpTo(LOGIN) saca del historial al login y, si venía de ahí, al registro.
+        val goHome = {
+            navController.navigate(NavRoutes.HOME) {
+                popUpTo(NavRoutes.LOGIN) { inclusive = true }
+            }
+        }
+
         composable(NavRoutes.LOGIN) {
-            var showBiometricOffer by remember { mutableStateOf(false) }
-
-            fun goHome() {
-                navController.navigate(NavRoutes.HOME) {
-                    popUpTo(NavRoutes.LOGIN) { inclusive = true }
-                }
+            AfterAuthentication(sessionPreferences, onDone = goHome) { onAuthenticated ->
+                LoginScreenView(
+                    onLoginSuccess = onAuthenticated,
+                    onNavigateToRegister = { navController.navigate(NavRoutes.REGISTER) }
+                )
             }
+        }
 
-            fun finishBiometricOffer(enable: Boolean) {
-                sessionPreferences.markBiometricOffered()
-                sessionPreferences.setBiometricEnabled(enable)
-                showBiometricOffer = false
-                goHome()
-            }
-
-            LoginScreenView(
-                onLoginSuccess = {
-                    // Tras el primer login con contraseña, ofrecer la biometría una sola vez.
-                    if (canUseBiometrics(context) && !sessionPreferences.wasBiometricOffered()) {
-                        showBiometricOffer = true
-                    } else {
-                        goHome()
-                    }
-                }
-            )
-
-            if (showBiometricOffer) {
-                BiometricOfferDialog(
-                    onAccept = { finishBiometricOffer(enable = true) },
-                    onDecline = { finishBiometricOffer(enable = false) }
+        composable(NavRoutes.REGISTER) {
+            AfterAuthentication(sessionPreferences, onDone = goHome) { onAuthenticated ->
+                RegisterScreenView(
+                    onRegisterSuccess = onAuthenticated,
+                    onBack = { navController.popBackStack() }
                 )
             }
         }
@@ -120,5 +113,41 @@ fun AppNavHost(
                 }
             )
         }
+    }
+}
+
+/**
+ * Envuelve una pantalla que inicia sesión (login o registro). Tras el primer
+ * acceso con contraseña ofrece la biometría una sola vez y luego llama a [onDone].
+ */
+@Composable
+private fun AfterAuthentication(
+    sessionPreferences: SessionPreferences,
+    onDone: () -> Unit,
+    content: @Composable (onAuthenticated: () -> Unit) -> Unit
+) {
+    val context = LocalContext.current
+    var showBiometricOffer by remember { mutableStateOf(false) }
+
+    fun finishBiometricOffer(enable: Boolean) {
+        sessionPreferences.markBiometricOffered()
+        sessionPreferences.setBiometricEnabled(enable)
+        showBiometricOffer = false
+        onDone()
+    }
+
+    content {
+        if (canUseBiometrics(context) && !sessionPreferences.wasBiometricOffered()) {
+            showBiometricOffer = true
+        } else {
+            onDone()
+        }
+    }
+
+    if (showBiometricOffer) {
+        BiometricOfferDialog(
+            onAccept = { finishBiometricOffer(enable = true) },
+            onDecline = { finishBiometricOffer(enable = false) }
+        )
     }
 }

@@ -66,6 +66,8 @@ import com.example.cafeenlinea.ui.auth.data.SessionPreferences
 import com.example.cafeenlinea.ui.profile.data.CloudinaryUploader
 import kotlinx.coroutines.launch
 import java.io.File
+import androidx.compose.ui.res.stringResource
+import com.example.cafeenlinea.R
 
 private const val SUPPORT_EMAIL = "soporte@cafeenlinea.com"
 private const val SUPPORT_WHATSAPP_NUMBER = "6142426011" // código país + número, sin + ni espacios
@@ -100,7 +102,7 @@ private fun ProfileMainContent(
 ) {
     val context = LocalContext.current
     val sessionPreferences = remember { SessionPreferences(context) }
-    val username = sessionPreferences.username() ?: "Usuario"
+    val username = sessionPreferences.username() ?: stringResource(R.string.profile_default_username)
     val coroutineScope = rememberCoroutineScope()
 
     // Ahora guarda una URL de Cloudinary, no una ruta local.
@@ -119,7 +121,7 @@ private fun ProfileMainContent(
                 sessionPreferences.saveProfilePhotoPath(url)
                 photoUrl = url
             } else {
-                Toast.makeText(context, "No se pudo subir la foto, intenta de nuevo", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.profile_error_upload), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -143,7 +145,7 @@ private fun ProfileMainContent(
         if (granted) {
             galleryLauncher.launch("image/*")
         } else {
-            Toast.makeText(context, "Necesitas dar permiso de galería para elegir la foto", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.profile_error_gallery_permission), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -163,12 +165,12 @@ private fun ProfileMainContent(
             pendingCameraUri = uri
             cameraLauncher.launch(uri)
         } else {
-            Toast.makeText(context, "Necesitas dar permiso de cámara para tomar la foto", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.profile_error_camera_permission), Toast.LENGTH_SHORT).show()
         }
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Perfil") }) }
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.profile_title)) }) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -204,7 +206,7 @@ private fun ProfileMainContent(
                     photoUrl != null -> {
                         AsyncImage(
                             model = photoUrl,
-                            contentDescription = "Foto de perfil",
+                            contentDescription = stringResource(R.string.cd_profile_photo),
                             modifier = Modifier
                                 .size(96.dp)
                                 .clip(CircleShape),
@@ -237,7 +239,7 @@ private fun ProfileMainContent(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.CameraAlt,
-                            contentDescription = "Cambiar foto",
+                            contentDescription = stringResource(R.string.cd_change_photo),
                             modifier = Modifier.padding(5.dp),
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
@@ -249,7 +251,7 @@ private fun ProfileMainContent(
                     onDismissRequest = { showPhotoMenu = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Tomar foto") },
+                        text = { Text(stringResource(R.string.profile_take_photo)) },
                         leadingIcon = { Icon(Icons.Filled.CameraAlt, contentDescription = null) },
                         onClick = {
                             showPhotoMenu = false
@@ -265,7 +267,7 @@ private fun ProfileMainContent(
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("Elegir de galería") },
+                        text = { Text(stringResource(R.string.profile_pick_gallery)) },
                         leadingIcon = { Icon(Icons.Filled.Photo, contentDescription = null) },
                         onClick = {
                             showPhotoMenu = false
@@ -291,13 +293,13 @@ private fun ProfileMainContent(
 
             ProfileOptionRow(
                 icon = Icons.Filled.Description,
-                label = "Términos y condiciones",
+                label = stringResource(R.string.profile_terms),
                 onClick = onNavigateToTerms
             )
 
             ProfileOptionRow(
                 icon = Icons.Filled.PrivacyTip,
-                label = "Aviso de privacidad",
+                label = stringResource(R.string.profile_privacy),
                 onClick = onNavigateToPrivacy
             )
 
@@ -305,30 +307,30 @@ private fun ProfileMainContent(
 
             ProfileOptionRow(
                 icon = Icons.Filled.Email,
-                label = "Soporte por correo",
+                label = stringResource(R.string.profile_support_email),
                 onClick = {
                     try {
                         val intent = Intent(Intent.ACTION_SENDTO).apply {
                             data = Uri.parse("mailto:$SUPPORT_EMAIL")
-                            putExtra(Intent.EXTRA_SUBJECT, "Soporte CafeEnLinea")
+                            putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.profile_support_email_subject))
                         }
                         context.startActivity(intent)
                     } catch (e: ActivityNotFoundException) {
-                        Toast.makeText(context, "No hay una app de correo instalada", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.profile_error_no_email_app), Toast.LENGTH_SHORT).show()
                     }
                 }
             )
 
             ProfileOptionRow(
                 icon = Icons.Filled.SupportAgent,
-                label = "Soporte por WhatsApp",
+                label = stringResource(R.string.profile_support_whatsapp),
                 onClick = {
                     try {
-                        val message = Uri.encode("Hola, necesito ayuda con mi pedido en CafeEnLinea")
+                        val message = Uri.encode(context.getString(R.string.profile_support_whatsapp_message))
                         val uri = Uri.parse("https://wa.me/$SUPPORT_WHATSAPP_NUMBER?text=$message")
                         context.startActivity(Intent(Intent.ACTION_VIEW, uri))
                     } catch (e: ActivityNotFoundException) {
-                        Toast.makeText(context, "WhatsApp no está instalado", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.profile_error_no_whatsapp), Toast.LENGTH_SHORT).show()
                     }
                 }
             )
@@ -346,7 +348,7 @@ private fun ProfileMainContent(
                     contentColor = MaterialTheme.colorScheme.onErrorContainer
                 )
             ) {
-                Text("Cerrar sesión")
+                Text(stringResource(R.string.profile_logout))
             }
         }
     }

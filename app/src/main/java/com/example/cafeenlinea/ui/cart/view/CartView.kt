@@ -33,6 +33,8 @@ import coil.compose.AsyncImage
 import com.example.cafeenlinea.common.components.CafeLoading
 import com.example.cafeenlinea.ui.cart.model.CartItem
 import com.example.cafeenlinea.ui.cart.viewmodel.CartViewModel
+import androidx.compose.ui.res.stringResource
+import com.example.cafeenlinea.R
 
 /**
  * Pantalla del carrito. Solo dibuja: recibe el [CartViewModel] compartido con
@@ -50,7 +52,7 @@ fun CartView(
     val isSubmitting by cartViewModel.isSubmitting.collectAsState()
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Carrito") }) },
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.cart_title)) }) },
         bottomBar = {
             if (items.isNotEmpty()) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -58,7 +60,7 @@ fun CartView(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Total", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.cart_total), style = MaterialTheme.typography.titleMedium)
                         Text(
                             text = "$${"%.2f".format(cartViewModel.currentTotal())}",
                             style = MaterialTheme.typography.titleMedium,
@@ -76,7 +78,7 @@ fun CartView(
                         if (isSubmitting) {
                             CafeLoading(size = 28.dp)
                         } else {
-                            Text("Confirmar pedido")
+                            Text(stringResource(R.string.cart_confirm))
                         }
                     }
                 }
@@ -90,7 +92,7 @@ fun CartView(
         ) {
             if (items.isEmpty()) {
                 Text(
-                    text = "Tu carrito está vacío",
+                    text = stringResource(R.string.cart_empty),
                     modifier = Modifier.align(Alignment.Center),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -158,7 +160,7 @@ private fun CartItemRow(
                 // C05: nota libre
                 if (item.note.isNotBlank()) {
                     Text(
-                        text = "Nota: " + item.note,
+                        text = stringResource(R.string.cart_item_note, item.note),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

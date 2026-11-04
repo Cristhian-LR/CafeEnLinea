@@ -45,6 +45,8 @@ import com.example.cafeenlinea.common.components.CafeLoading
 import com.example.cafeenlinea.ui.cart.viewmodel.CartViewModel
 import com.example.cafeenlinea.ui.home.model.Shop
 import com.example.cafeenlinea.ui.home.viewmodel.CafeteriaHomeViewModel
+import androidx.compose.ui.res.stringResource
+import com.example.cafeenlinea.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,7 +72,7 @@ fun CafeteriaHomeView(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Cafetería") }
+                title = { Text(stringResource(R.string.home_title)) }
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
@@ -95,7 +97,7 @@ fun CafeteriaHomeView(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(uiState.error!!, color = MaterialTheme.colorScheme.error)
-                        Button(onClick = viewModel::loadCafeteriaHome) { Text("Reintentar") }
+                        Button(onClick = viewModel::loadCafeteriaHome) { Text(stringResource(R.string.action_retry)) }
                     }
                 }
 
@@ -123,7 +125,7 @@ fun CafeteriaHomeView(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(horizontal = 16.dp),
-                                        placeholder = { Text("Buscar en el menú") },
+                                        placeholder = { Text(stringResource(R.string.home_search_placeholder)) },
                                         leadingIcon = {
                                             Icon(Icons.Default.Search, contentDescription = null)
                                         },
@@ -151,7 +153,7 @@ fun CafeteriaHomeView(
                             if (uiState.noResults) {
                                 item {
                                     Text(
-                                        text = "Sin resultados",
+                                        text = stringResource(R.string.home_no_results),
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.padding(horizontal = 16.dp)
@@ -160,7 +162,7 @@ fun CafeteriaHomeView(
                             }
 
                             if (uiState.featured.isNotEmpty()) {
-                                item { SectionTitle("Destacados") }
+                                item { SectionTitle(stringResource(R.string.home_section_featured)) }
                                 item {
                                     LazyRow(
                                         contentPadding = PaddingValues(horizontal = 16.dp),
@@ -231,7 +233,7 @@ fun CafeteriaHomeView(
                             }
 
                             if (uiState.combos.isNotEmpty()) {
-                                item { SectionTitle("Combos") }
+                                item { SectionTitle(stringResource(R.string.home_section_combos)) }
                                 item {
                                     LazyRow(
                                         contentPadding = PaddingValues(horizontal = 16.dp),
@@ -255,7 +257,7 @@ fun CafeteriaHomeView(
                             }
 
                             if (uiState.extras.isNotEmpty()) {
-                                item { SectionTitle("Extras") }
+                                item { SectionTitle(stringResource(R.string.home_section_extras)) }
                                 items(uiState.extras, key = { "extra_${it.id}" }) { extra ->
                                     Card(
                                         modifier = Modifier

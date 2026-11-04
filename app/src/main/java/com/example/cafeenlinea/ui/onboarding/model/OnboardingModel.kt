@@ -1,12 +1,13 @@
 package com.example.cafeenlinea.ui.onboarding.model
 
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.annotation.StringRes
 
 data class OnboardingPage(
     val icon: ImageVector,
-    val tag: String,
-    val title: String,
-    val description: String,
+    @StringRes val tag: Int,
+    @StringRes val title: Int,
+    @StringRes val description: Int,
     /** Íconos pequeños que flotan alrededor de la ilustración principal (máximo 3). */
     val highlights: List<ImageVector> = emptyList()
 )
