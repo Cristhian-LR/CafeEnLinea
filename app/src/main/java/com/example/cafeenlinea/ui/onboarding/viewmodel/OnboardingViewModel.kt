@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import com.example.cafeenlinea.R
 
 /**
  * ViewModel para la pantalla de onboarding de Café en Línea.
@@ -35,9 +36,9 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
     private val pages = listOf(
         OnboardingPage(
             icon = Icons.Filled.LocalCafe,
-            tag = "Bienvenida",
-            title = "Bienvenido a Café en Línea",
-            description = "Ordena tu comida y snacks favoritos desde cualquier punto del campus.",
+            tag = R.string.onboarding_welcome_tag,
+            title = R.string.onboarding_welcome_title,
+            description = R.string.onboarding_welcome_description,
             highlights = listOf(
                 Icons.Filled.Restaurant,
                 Icons.Filled.BakeryDining,
@@ -46,9 +47,9 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
         ),
         OnboardingPage(
             icon = Icons.Filled.ShoppingCart,
-            tag = "Pedidos",
-            title = "Ordena y paga desde tu celular",
-            description = "Elige tu cafetería favorita, arma tu pedido y paga sin salir de la app.",
+            tag = R.string.onboarding_orders_tag,
+            title = R.string.onboarding_orders_title,
+            description = R.string.onboarding_orders_description,
             highlights = listOf(
                 Icons.Filled.Storefront,
                 Icons.Filled.CreditCard,
@@ -57,9 +58,9 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
         ),
         OnboardingPage(
             icon = Icons.Filled.NotificationsActive,
-            tag = "Sin filas",
-            title = "Recoge sin hacer fila",
-            description = "Te avisamos en cuanto tu pedido esté listo para que solo pases a recogerlo.",
+            tag = R.string.onboarding_pickup_tag,
+            title = R.string.onboarding_pickup_title,
+            description = R.string.onboarding_pickup_description,
             highlights = listOf(
                 Icons.Filled.Timer,
                 Icons.Filled.CheckCircle,

@@ -8,6 +8,7 @@ import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
+import com.example.cafeenlinea.R
 
 /**
  * Huella (casi siempre STRONG) o rostro (en muchos teléfonos, como el Huawei de
@@ -64,7 +65,7 @@ fun showBiometricPrompt(
     val promptInfo = BiometricPrompt.PromptInfo.Builder()
         .setTitle(title)
         .setSubtitle(subtitle)
-        .setNegativeButtonText("Usar contraseña")
+        .setNegativeButtonText(activity.getString(R.string.biometric_use_password))
         .setAllowedAuthenticators(AUTHENTICATORS)
         .build()
 

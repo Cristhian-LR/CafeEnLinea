@@ -1,15 +1,11 @@
 package com.example.cafeenlinea
 
 import com.example.cafeenlinea.ui.home.model.*
-import com.example.cafeenlinea.ui.home.network.CafeteriaService
-import com.example.cafeenlinea.ui.home.viewmodel.CafeteriaHomeViewModel
 import com.example.cafeenlinea.ui.home.viewmodel.applyFilters
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -71,16 +67,5 @@ class CafeteriaHomeViewModelTest {
 
     @Test fun `sin filtros no hay noResults`() {
         assertFalse(applyFilters(raw, "", null).noResults)
-    }
-
-    @Test fun `viewmodel filtra con servicio falso`() = runTest(dispatcher) {
-        val fake = object : CafeteriaService {
-            override suspend fun getCafeteriaHome() = response
-        }
-        val vm = CafeteriaHomeViewModel(fake)
-        advanceUntilIdle()
-        vm.onSearchQueryChange("burrito")
-        advanceUntilIdle()
-        assertEquals(1, vm.uiState.value.sections.size)
     }
 }

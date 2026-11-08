@@ -39,6 +39,7 @@ import com.example.cafeenlinea.R
 import com.example.cafeenlinea.ui.theme.GreenDark
 import com.example.cafeenlinea.ui.theme.GreenDarkest
 import com.example.cafeenlinea.ui.theme.GreenLight
+import androidx.compose.ui.res.stringResource
 
 private val ErrorRed = Color(0xFFC1443A)
 
@@ -67,8 +68,8 @@ fun BiometricLockView(
         error = null
         showBiometricPrompt(
             activity = activity,
-            title = "Entrar a Café en Línea",
-            subtitle = "Usa tu huella o rostro"
+            title = activity.getString(R.string.biometric_lock_prompt_title),
+            subtitle = activity.getString(R.string.biometric_lock_prompt_subtitle)
         ) { result ->
             when (result) {
                 BiometricResult.Success -> onUnlocked()
@@ -90,7 +91,7 @@ fun BiometricLockView(
     ) {
         Image(
             painter = painterResource(id = R.drawable.cafe_express),
-            contentDescription = "Logo de Café en Línea",
+            contentDescription = stringResource(R.string.cd_app_logo),
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .size(56.dp)
@@ -100,7 +101,7 @@ fun BiometricLockView(
         Spacer(modifier = Modifier.height(28.dp))
 
         Text(
-            text = "Café en Línea",
+            text = stringResource(R.string.app_display_name),
             color = GreenDarkest,
             fontWeight = FontWeight.SemiBold,
             fontSize = 24.sp
@@ -109,7 +110,7 @@ fun BiometricLockView(
         Spacer(modifier = Modifier.height(4.dp))
 
         Text(
-            text = "Confirma que eres tú para continuar",
+            text = stringResource(R.string.biometric_lock_message),
             color = GreenLight,
             fontSize = 14.sp
         )
@@ -146,13 +147,13 @@ fun BiometricLockView(
                 .fillMaxWidth()
                 .height(50.dp)
         ) {
-            Text("Usar huella o rostro", fontSize = 15.sp, fontWeight = FontWeight.Medium)
+            Text(stringResource(R.string.biometric_lock_button), fontSize = 15.sp, fontWeight = FontWeight.Medium)
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
         TextButton(onClick = onUsePassword) {
-            Text("Entrar con contraseña", color = GreenDark)
+            Text(stringResource(R.string.biometric_lock_use_password), color = GreenDark)
         }
     }
 }

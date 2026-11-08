@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import com.example.cafeenlinea.R
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
@@ -29,15 +30,15 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         // Manejo de mensajes de notificación
         remoteMessage.notification?.let {
             Log.d(TAG, "Notificación - Título: ${it.title}, Cuerpo: ${it.body}")
-            mostrarNotificacion(it.title ?: "Café Express", it.body ?: "")
+            mostrarNotificacion(it.title ?: getString(R.string.notification_default_title), it.body ?: "")
         }
 
         // Manejo de mensajes de datos (Data)
         if (remoteMessage.data.isNotEmpty()) {
             Log.d(TAG, "Payload de datos: ${remoteMessage.data}")
             if (remoteMessage.notification == null) {
-                val titulo = remoteMessage.data["title"] ?: "Actualización de Pedido"
-                val mensaje = remoteMessage.data["body"] ?: "Tienes una nueva actualización."
+                val titulo = remoteMessage.data["title"] ?: getString(R.string.notification_order_update_title)
+                val mensaje = remoteMessage.data["body"] ?: getString(R.string.notification_order_update_body)
                 mostrarNotificacion(titulo, mensaje)
             }
         }
@@ -49,10 +50,10 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Notificaciones de Pedidos",
+                getString(R.string.notification_channel_name),
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = "Avisos sobre el estado de los pedidos"
+                description = getString(R.string.notification_channel_description)
             }
             notificationManager.createNotificationChannel(channel)
         }

@@ -32,6 +32,8 @@ import com.example.cafeenlinea.ui.cart.model.CartItem
 import com.example.cafeenlinea.ui.cart.model.buildCartItemId
 import com.example.cafeenlinea.ui.cart.model.calculateLineTotal
 import com.example.cafeenlinea.ui.home.model.Extra
+import androidx.compose.ui.res.stringResource
+import com.example.cafeenlinea.R
 
 /** Datos mínimos del producto o destacado que se muestra en el detalle. */
 data class DetailTarget(
@@ -42,7 +44,8 @@ data class DetailTarget(
     val sectionNote: String,
     val price: Double,
     val priceText: String,
-    val image: String
+    val image: String,
+    val productId: String = ""
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -88,7 +91,7 @@ fun ProductDetailSheet(
             }
 
             if (extras.isNotEmpty()) {
-                Text("Extras", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.product_extras), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 extras.forEach { extra ->
                     val checked = extra.id in selectedIds
                     Row(
@@ -110,7 +113,7 @@ fun ProductDetailSheet(
                 value = note,
                 onValueChange = { note = it },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Nota (ej. sin cebolla)") }
+                label = { Text(stringResource(R.string.product_note_label)) }
             )
 
             Row(
@@ -138,13 +141,14 @@ fun ProductDetailSheet(
                             image = target.image,
                             quantity = quantity,
                             extras = selectedExtras,
-                            note = note.trim()
+                            note = note.trim(),
+                            productId = target.productId
                         )
                     )
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Agregar al carrito · \$${"%.2f".format(total)}")
+                Text(stringResource(R.string.product_add_to_cart, "\$${"%.2f".format(total)}"))
             }
         }
     }

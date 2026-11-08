@@ -11,6 +11,7 @@ import com.example.cafeenlinea.ui.home.model.Extra
  * @property priceText Precio unitario ya formateado (ej. "$35.00").
  * @property image URL de la imagen.
  * @property quantity Cuántos de este producto hay en el carrito.
+ * @property productId Id del producto en el servidor (lo necesita crearPedido).
  */
 data class CartItem(
     val id: String,
@@ -20,7 +21,8 @@ data class CartItem(
     val image: String,
     val quantity: Int = 1,
     val extras: List<Extra> = emptyList(),
-    val note: String = ""
+    val note: String = "",
+    val productId: String = ""
 ) {
     /** Precio de una pieza con sus extras. */
     val unitPrice: Double get() = price + extras.sumOf { it.price }

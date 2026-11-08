@@ -18,11 +18,15 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,12 +37,17 @@ import coil.compose.AsyncImage
 import com.example.cafeenlinea.common.components.CafeLoading
 import com.example.cafeenlinea.ui.cart.model.CartItem
 import com.example.cafeenlinea.ui.cart.viewmodel.CartViewModel
+import androidx.compose.ui.res.stringResource
+import com.example.cafeenlinea.R
 
 /**
  * Pantalla del carrito. Solo dibuja: recibe el [CartViewModel] compartido con
  * el Home, así que refleja en tiempo real lo que se va agregando.
  *
  * C03: Sustituye estado de carga al confirmar pedido por animación CafeLoading.
+ *
+ * @param onCheckout Lo llama "Confirmar pedido". MainScreen le pasa
+ *   [CartViewModel.confirmOrder] con el usuario y la cafetería de la sesión.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,9 +57,20 @@ fun CartView(
 ) {
     val items by cartViewModel.items.collectAsState()
     val isSubmitting by cartViewModel.isSubmitting.collectAsState()
+    val checkoutError by cartViewModel.checkoutError.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Si falla confirmar el pedido, avisa y conserva el carrito
+    LaunchedEffect(checkoutError) {
+        checkoutError?.let { mensaje ->
+            snackbarHostState.showSnackbar(mensaje)
+            cartViewModel.clearCheckoutError()
+        }
+    }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Carrito") }) },
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.cart_title)) }) },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         bottomBar = {
             if (items.isNotEmpty()) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -58,7 +78,7 @@ fun CartView(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Total", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.cart_total), style = MaterialTheme.typography.titleMedium)
                         Text(
                             text = "$${"%.2f".format(cartViewModel.currentTotal())}",
                             style = MaterialTheme.typography.titleMedium,
@@ -76,7 +96,7 @@ fun CartView(
                         if (isSubmitting) {
                             CafeLoading(size = 28.dp)
                         } else {
-                            Text("Confirmar pedido")
+                            Text(stringResource(R.string.cart_confirm))
                         }
                     }
                 }
@@ -90,7 +110,7 @@ fun CartView(
         ) {
             if (items.isEmpty()) {
                 Text(
-                    text = "Tu carrito está vacío",
+                    text = stringResource(R.string.cart_empty),
                     modifier = Modifier.align(Alignment.Center),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -158,7 +178,7 @@ private fun CartItemRow(
                 // C05: nota libre
                 if (item.note.isNotBlank()) {
                     Text(
-                        text = "Nota: " + item.note,
+                        text = stringResource(R.string.cart_item_note, item.note),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

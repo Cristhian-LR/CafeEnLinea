@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.example.cafeenlinea.R
 
 /**
  * ViewModel del home de la cafeteria. Dueno del estado ([CafeteriaHomeUiState]) y
@@ -58,7 +59,7 @@ class CafeteriaHomeViewModel(application: Application) : AndroidViewModel(applic
                 aplicarMenu(pedirMenu())
                 _uiState.update { it.copy(isLoading = false) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = mensajeDeError(e, "cargar el menú")) }
+                _uiState.update { it.copy(isLoading = false, error = mensajeDeError(e, R.string.home_error_load)) }
             }
         }
     }
@@ -74,7 +75,7 @@ class CafeteriaHomeViewModel(application: Application) : AndroidViewModel(applic
                 aplicarMenu(pedirMenu())
                 _uiState.update { it.copy(isRefreshing = false) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isRefreshing = false, error = mensajeDeError(e, "actualizar")) }
+                _uiState.update { it.copy(isRefreshing = false, error = mensajeDeError(e, R.string.home_error_refresh)) }
             }
         }
     }
@@ -86,7 +87,7 @@ class CafeteriaHomeViewModel(application: Application) : AndroidViewModel(applic
 
     private suspend fun pedirMenu(): CafeteriaHomeResponse {
         val cafeteriaId = session.cafeteriaId()
-            ?: throw ApiException("Tu usuario no tiene una cafetería asignada.")
+            ?: throw ApiException(str(R.string.home_error_no_cafeteria))
         return CafeteriaRepository.cargarMenu(cafeteriaId)
     }
 
@@ -103,12 +104,14 @@ class CafeteriaHomeViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    private fun mensajeDeError(e: Exception, accion: String): String = when (e) {
+    private fun str(id: Int): String = getApplication<Application>().getString(id)
+
+    private fun mensajeDeError(e: Exception, genericoRes: Int): String = when (e) {
         is SinConexionException ->
-            "No se pudo conectar. Si el servidor estaba iniciando, vuelve a intentar."
+            str(R.string.error_no_connection)
         is SesionExpiradaException ->
-            "Tu sesión expiró. Cierra sesión desde Perfil e inicia de nuevo."
-        is ApiException -> e.message ?: "Error del servidor"
-        else -> "No se pudo $accion. Intenta de nuevo."
+            str(R.string.home_error_session_expired)
+        is ApiException -> e.message ?: str(R.string.error_server)
+        else -> str(genericoRes)
     }
 }

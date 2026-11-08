@@ -86,6 +86,8 @@ private fun MarkdownText(markdown: String, modifier: Modifier = Modifier) {
         }
     )
 }
+import androidx.compose.ui.res.stringResource
+import com.example.cafeenlinea.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -108,10 +110,10 @@ fun TermsView(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Términos y condiciones") },
+                title = { Text(stringResource(R.string.profile_terms)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                     }
                 }
             )
