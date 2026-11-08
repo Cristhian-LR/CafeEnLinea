@@ -1,6 +1,8 @@
 package com.example.cafeenlinea.ui.profile.view
 
 import android.util.Log
+import androidx.compose.ui.res.stringResource
+import com.example.cafeenlinea.R
 import android.widget.TextView
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -86,8 +88,6 @@ private fun MarkdownText(markdown: String, modifier: Modifier = Modifier) {
         }
     )
 }
-import androidx.compose.ui.res.stringResource
-import com.example.cafeenlinea.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
