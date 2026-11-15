@@ -32,6 +32,7 @@ import com.example.cafeenlinea.ui.cart.model.CartItem
 import com.example.cafeenlinea.ui.cart.model.buildCartItemId
 import com.example.cafeenlinea.ui.cart.model.calculateLineTotal
 import com.example.cafeenlinea.ui.home.model.Extra
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.example.cafeenlinea.R
 
@@ -72,8 +73,11 @@ fun ProductDetailSheet(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             AsyncImage(
-                model = target.image,
+                model = target.image.ifBlank { R.drawable.cafe_express },
                 contentDescription = target.name,
+                placeholder = painterResource(R.drawable.cafe_express),
+                error = painterResource(R.drawable.cafe_express),
+                fallback = painterResource(R.drawable.cafe_express),
                 modifier = Modifier.fillMaxWidth().height(180.dp),
                 contentScale = ContentScale.Crop
             )

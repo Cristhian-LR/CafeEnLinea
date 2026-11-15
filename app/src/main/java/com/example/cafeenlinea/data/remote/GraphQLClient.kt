@@ -20,7 +20,13 @@ import java.util.concurrent.TimeUnit
 // mientras no importes las dos a la vez.
 // ---------------------------------------------------------------------------
 data class Dinero(val monto: Double, val moneda: String)
-data class Usuario(val id: String, val nombre: String, val correo: String, val cafeteriaId: String)
+data class Usuario(
+    val id: String,
+    val nombre: String,
+    val correo: String,
+    val cafeteriaId: String,
+    val fotoPerfilUrl: String? = null
+)
 data class Sesion(val token: String, val expiraEn: Int, val usuario: Usuario)
 data class Escuela(val id: String, val clave: String, val nombre: String)
 data class Cafeteria(val id: String, val nombre: String)
@@ -39,6 +45,20 @@ data class Producto(
 )
 data class ItemPedido(val nombreProducto: String, val cantidad: Int, val precioUnitario: Dinero? = null)
 data class Pedido(val id: String, val estado: String, val total: Dinero? = null, val items: List<ItemPedido> = emptyList())
+
+enum class TipoRecursoImagen {
+    PRODUCTO,
+    PERFIL
+}
+
+data class FirmaCloudinary(
+    val signature: String,
+    val timestamp: Int,
+    val apiKey: String,
+    val cloudName: String,
+    val folder: String,
+    val uploadPreset: String
+)
 
 /** El servidor respondio con un error de negocio (ej. "Stock insuficiente", "Credenciales invalidas"). */
 class ApiException(mensaje: String, val codigo: String? = null) : Exception(mensaje)
@@ -66,13 +86,15 @@ internal interface GraphQLService {
 private const val Q_LOGIN = "mutation(\$correo: String!, \$password: String!) { login(correo: \$correo, password: \$password) { token expiraEn usuario { id nombre correo cafeteriaId } } }"
 private const val Q_REGISTRO = "mutation(\$nombre: String!, \$correo: String!, \$password: String!, \$cafeteriaId: ID!) { registro(nombre: \$nombre, correo: \$correo, password: \$password, cafeteriaId: \$cafeteriaId) { token expiraEn usuario { id nombre correo cafeteriaId } } }"
 private const val Q_LOGOUT = "mutation { logout }"
-private const val Q_ME = "query { me { id nombre correo cafeteriaId } }"
+private const val Q_ME = "query { me { id nombre correo cafeteriaId fotoPerfilUrl } }"
 private const val Q_ESCUELAS = "query { escuelas { id clave nombre } }"
 private const val Q_CAFETERIAS = "query(\$escuelaId: ID!) { cafeteriasPorEscuela(escuelaId: \$escuelaId) { id nombre } }"
 private const val Q_PRODUCTOS = "query(\$cafeteriaId: ID!) { productosPorCafeteria(cafeteriaId: \$cafeteriaId) { id nombre disponible precio { monto moneda } inventario { stock requiereReposicion } descripcion categoria imagenUrl destacado etiqueta } }"
 private const val Q_CAFETERIA = "query(\$id: ID!) { cafeteria(id: \$id) { id nombre } }"
 private const val Q_CREAR_PEDIDO = "mutation(\$usuarioId: ID!, \$cafeteriaId: ID!, \$items: [ItemPedidoInput!]!) { crearPedido(usuarioId: \$usuarioId, cafeteriaId: \$cafeteriaId, items: \$items) { id estado total { monto moneda } items { nombreProducto cantidad precioUnitario { monto moneda } } } }"
 private const val Q_PEDIDOS = "query(\$usuarioId: ID!) { pedidosPorUsuario(usuarioId: \$usuarioId) { id estado total { monto moneda } items { nombreProducto cantidad } } }"
+private const val M_SOLICITAR_FIRMA = "mutation(\$tipo: TipoRecursoImagen!, \$cafeteriaId: ID) { solicitarFirmaSubida(tipo: \$tipo, cafeteriaId: \$cafeteriaId) { signature timestamp apiKey cloudName folder uploadPreset } }"
+private const val M_ACTUALIZAR_FOTO_PERFIL = "mutation(\$fotoUrl: String!) { actualizarFotoPerfil(fotoUrl: \$fotoUrl) { id nombre correo cafeteriaId fotoPerfilUrl } }"
 
 object ApiClient {
 
@@ -172,6 +194,33 @@ object ApiClient {
 
     suspend fun pedidosDelUsuario(usuarioId: String): List<Pedido> =
         ejecutar("pedidosPorUsuario", Q_PEDIDOS, mapOf("usuarioId" to usuarioId))
+
+    // -------------------------------------------------------------------
+    // Cloudinary e Imágenes
+    // -------------------------------------------------------------------
+
+    /**
+     * Solicita una firma de subida autorizada al backend para Cloudinary.
+     * Para perfil: tipo = TipoRecursoImagen.PERFIL (sube a perfiles/<usuarioId>).
+     */
+    suspend fun solicitarFirmaSubida(
+        tipo: TipoRecursoImagen,
+        cafeteriaId: String? = null
+    ): FirmaCloudinary = ejecutar(
+        campo = "solicitarFirmaSubida",
+        query = M_SOLICITAR_FIRMA,
+        variables = mapOf("tipo" to tipo.name, "cafeteriaId" to cafeteriaId)
+    )
+
+    /**
+     * Persiste en el backend la URL de Cloudinary de la foto de perfil del usuario
+     * de la sesion, para que se conserve entre dispositivos.
+     */
+    suspend fun actualizarFotoPerfil(fotoUrl: String): Usuario = ejecutar(
+        campo = "actualizarFotoPerfil",
+        query = M_ACTUALIZAR_FOTO_PERFIL,
+        variables = mapOf("fotoUrl" to fotoUrl)
+    )
 
     // -------------------------------------------------------------------
     // Envia la consulta y traduce los fallos a excepciones claras para la UI
