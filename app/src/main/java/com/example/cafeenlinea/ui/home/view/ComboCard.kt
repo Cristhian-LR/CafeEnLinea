@@ -20,6 +20,7 @@ import coil.compose.AsyncImage
 import com.example.cafeenlinea.ui.cart.model.CartItem
 import com.example.cafeenlinea.ui.cart.viewmodel.CartViewModel
 import com.example.cafeenlinea.ui.home.model.Combo
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.example.cafeenlinea.R
 
@@ -34,8 +35,11 @@ fun ComboCard(
     ) {
         Column {
             AsyncImage(
-                model = combo.image,
+                model = combo.image.ifBlank { R.drawable.cafe_express },
                 contentDescription = combo.name,
+                placeholder = painterResource(R.drawable.cafe_express),
+                error = painterResource(R.drawable.cafe_express),
+                fallback = painterResource(R.drawable.cafe_express),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp),

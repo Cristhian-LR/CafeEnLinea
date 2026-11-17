@@ -43,6 +43,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,6 +62,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
+import com.example.cafeenlinea.data.remote.ApiClient
+import com.example.cafeenlinea.data.remote.ApiException
+import com.example.cafeenlinea.data.remote.SesionExpiradaException
+import com.example.cafeenlinea.data.remote.mensajeDeError
 import com.example.cafeenlinea.ui.auth.biometric.BiometricSettingRow
 import com.example.cafeenlinea.ui.auth.data.SessionPreferences
 import com.example.cafeenlinea.ui.profile.data.CloudinaryUploader
@@ -111,17 +116,34 @@ private fun ProfileMainContent(
     var showPhotoMenu by remember { mutableStateOf(false) }
     var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
 
-    /** Sube la imagen elegida/tomada a Cloudinary y guarda la URL resultante. */
+    // Al abrir Perfil, recupera del backend la foto guardada para verla en cualquier dispositivo.
+    LaunchedEffect(Unit) {
+        runCatching { ApiClient.me().fotoPerfilUrl }
+            .getOrNull()
+            ?.takeIf { it.isNotBlank() }
+            ?.let { urlRemota ->
+                sessionPreferences.saveProfilePhotoPath(urlRemota)
+                photoUrl = urlRemota
+            }
+    }
+
+    /** Sube la imagen elegida/tomada a Cloudinary solicitando la firma al backend y guarda la URL resultante. */
     fun uploadAndSave(uri: Uri) {
         isUploading = true
         coroutineScope.launch {
-            val url = CloudinaryUploader.uploadImage(context, uri)
-            isUploading = false
-            if (url != null) {
+            try {
+                val url = CloudinaryUploader.uploadProfileImage(context, uri)
+                ApiClient.actualizarFotoPerfil(url)
                 sessionPreferences.saveProfilePhotoPath(url)
                 photoUrl = url
-            } else {
-                Toast.makeText(context, context.getString(R.string.profile_error_upload), Toast.LENGTH_SHORT).show()
+            } catch (e: SesionExpiradaException) {
+                Toast.makeText(context, mensajeDeError(e, "subir foto de perfil"), Toast.LENGTH_LONG).show()
+            } catch (e: ApiException) {
+                Toast.makeText(context, e.message ?: context.getString(R.string.profile_error_upload), Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                Toast.makeText(context, e.message ?: context.getString(R.string.profile_error_upload), Toast.LENGTH_SHORT).show()
+            } finally {
+                isUploading = false
             }
         }
     }

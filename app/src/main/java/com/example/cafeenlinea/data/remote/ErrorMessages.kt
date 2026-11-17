@@ -6,6 +6,10 @@ fun mensajeDeError(e: Exception, accion: String): String = when (e) {
         "No se pudo conectar. Si el servidor estaba iniciando, vuelve a intentar."
     is SesionExpiradaException ->
         "Tu sesión expiró. Cierra sesión desde Perfil e inicia de nuevo."
-    is ApiException -> e.message ?: "Error del servidor"
+    is ApiException -> when (e.codigo) {
+        "TOO_MANY_REQUESTS" -> e.message ?: "Has superado el límite de intentos. Espera unos momentos e intenta de nuevo."
+        "FORBIDDEN" -> e.message ?: "No tienes permisos para realizar esta acción."
+        else -> e.message ?: "Error del servidor"
+    }
     else -> "No se pudo $accion. Intenta de nuevo."
 }

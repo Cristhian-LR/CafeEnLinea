@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.cafeenlinea.ui.home.model.FeaturedItem
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.example.cafeenlinea.R
 
@@ -35,8 +36,11 @@ fun FeaturedCard(
     ) {
         Column {
             AsyncImage(
-                model = item.image,
+                model = item.image.ifBlank { R.drawable.cafe_express },
                 contentDescription = item.name,
+                placeholder = painterResource(R.drawable.cafe_express),
+                error = painterResource(R.drawable.cafe_express),
+                fallback = painterResource(R.drawable.cafe_express),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(140.dp),

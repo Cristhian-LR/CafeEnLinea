@@ -37,6 +37,7 @@ import coil.compose.AsyncImage
 import com.example.cafeenlinea.common.components.CafeLoading
 import com.example.cafeenlinea.ui.cart.model.CartItem
 import com.example.cafeenlinea.ui.cart.viewmodel.CartViewModel
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.example.cafeenlinea.R
 
@@ -148,8 +149,11 @@ private fun CartItemRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
-                model = item.image,
+                model = item.image.ifBlank { R.drawable.cafe_express },
                 contentDescription = item.name,
+                placeholder = painterResource(R.drawable.cafe_express),
+                error = painterResource(R.drawable.cafe_express),
+                fallback = painterResource(R.drawable.cafe_express),
                 modifier = Modifier
                     .size(56.dp)
                     .clip(RoundedCornerShape(10.dp)),

@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.cafeenlinea.ui.home.model.CafeteriaProduct
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.example.cafeenlinea.R
 
@@ -38,8 +39,11 @@ fun MenuItemCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
-                model = product.image,
+                model = product.image.ifBlank { R.drawable.cafe_express },
                 contentDescription = product.name,
+                placeholder = painterResource(R.drawable.cafe_express),
+                error = painterResource(R.drawable.cafe_express),
+                fallback = painterResource(R.drawable.cafe_express),
                 modifier = Modifier
                     .size(64.dp)
                     .clip(RoundedCornerShape(12.dp)),
