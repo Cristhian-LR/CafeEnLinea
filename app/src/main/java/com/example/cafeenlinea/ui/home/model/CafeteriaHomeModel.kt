@@ -79,9 +79,8 @@ data class CafeteriaHomeResponse(
 )
 
 /**
- * Estado observable de la pantalla de la cafeteria.
- *
- * @property isRefreshing C02: indica si se esta recargando con Pull-to-Refresh.
+ * Contenido del menu de una cafeteria (datos crudos/cargados). Se reutiliza
+ * con [com.example.cafeenlinea.ui.home.viewmodel.applyFilters] para busqueda y chips.
  */
 data class CafeteriaHomeUiState(
     val isLoading: Boolean = false,
@@ -97,4 +96,27 @@ data class CafeteriaHomeUiState(
     val selectedSection: String? = null,
     val sectionNames: List<String> = emptyList(),
     val noResults: Boolean = false
+)
+
+/** Estado de una cafeteria en la lista desplegable del Home. */
+data class CafeteriaListItemUiState(
+    val id: String,
+    val nombre: String,
+    val expanded: Boolean = false,
+    val isLoading: Boolean = false,
+    val error: String? = null,
+    /** Menu cacheado en memoria (crudo, sin filtrar) mientras la pantalla siga abierta. */
+    val menu: CafeteriaHomeUiState? = null
+) {
+    val isEmpty: Boolean get() = !isLoading && error == null && menu != null &&
+        menu.featured.isEmpty() && menu.sections.isEmpty() && menu.combos.isEmpty() && menu.extras.isEmpty()
+}
+
+/** Estado de la pantalla Home con multiples cafeterias desplegables. */
+data class HomeScreenUiState(
+    val isLoading: Boolean = false,
+    val error: String? = null,
+    /** Mensaje informativo cuando no hay cafeterias que mostrar (no es error de sesion). */
+    val emptyMessage: String? = null,
+    val cafeterias: List<CafeteriaListItemUiState> = emptyList()
 )

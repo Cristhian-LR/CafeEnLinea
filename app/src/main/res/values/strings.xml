@@ -72,6 +72,9 @@
     <string name="home_section_combos">Combos</string>
     <string name="home_section_extras">Extras</string>
     <string name="home_error_no_cafeteria">Tu usuario no tiene una cafetería asignada.</string>
+    <string name="home_empty_no_escuela">No hay cafeterías para mostrar. Tu cuenta no tiene una escuela o cafetería asignada.</string>
+    <string name="home_cafeteria_default_name">Cafetería</string>
+    <string name="home_menu_empty">Esta cafetería no tiene productos disponibles por ahora.</string>
     <string name="home_error_session_expired">Tu sesión expiró. Cierra sesión desde Perfil e inicia de nuevo.</string>
     <string name="home_error_load">No se pudo cargar el menú. Intenta de nuevo.</string>
     <string name="home_error_refresh">No se pudo actualizar. Intenta de nuevo.</string>

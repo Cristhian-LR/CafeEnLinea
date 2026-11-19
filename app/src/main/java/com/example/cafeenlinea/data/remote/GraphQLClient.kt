@@ -24,7 +24,8 @@ data class Usuario(
     val id: String,
     val nombre: String,
     val correo: String,
-    val cafeteriaId: String,
+    val escuelaId: String? = null,
+    val cafeteriaId: String?,
     val fotoPerfilUrl: String? = null
 )
 data class Sesion(val token: String, val expiraEn: Int, val usuario: Usuario)
@@ -83,10 +84,10 @@ internal interface GraphQLService {
 // ---------------------------------------------------------------------------
 // Consultas (una sola linea cada una; "\$" es el simbolo $ de GraphQL en Kotlin)
 // ---------------------------------------------------------------------------
-private const val Q_LOGIN = "mutation(\$correo: String!, \$password: String!) { login(correo: \$correo, password: \$password) { token expiraEn usuario { id nombre correo cafeteriaId } } }"
-private const val Q_REGISTRO = "mutation(\$nombre: String!, \$correo: String!, \$password: String!, \$cafeteriaId: ID!) { registro(nombre: \$nombre, correo: \$correo, password: \$password, cafeteriaId: \$cafeteriaId) { token expiraEn usuario { id nombre correo cafeteriaId } } }"
+private const val Q_LOGIN = "mutation(\$correo: String!, \$password: String!) { login(correo: \$correo, password: \$password) { token expiraEn usuario { id nombre correo escuelaId cafeteriaId } } }"
+private const val Q_REGISTRO = "mutation(\$nombre: String!, \$correo: String!, \$password: String!, \$cafeteriaId: ID!) { registro(nombre: \$nombre, correo: \$correo, password: \$password, cafeteriaId: \$cafeteriaId) { token expiraEn usuario { id nombre correo escuelaId cafeteriaId } } }"
 private const val Q_LOGOUT = "mutation { logout }"
-private const val Q_ME = "query { me { id nombre correo cafeteriaId fotoPerfilUrl } }"
+private const val Q_ME = "query { me { id nombre correo escuelaId cafeteriaId fotoPerfilUrl } }"
 private const val Q_ESCUELAS = "query { escuelas { id clave nombre } }"
 private const val Q_CAFETERIAS = "query(\$escuelaId: ID!) { cafeteriasPorEscuela(escuelaId: \$escuelaId) { id nombre } }"
 private const val Q_PRODUCTOS = "query(\$cafeteriaId: ID!) { productosPorCafeteria(cafeteriaId: \$cafeteriaId) { id nombre disponible precio { monto moneda } inventario { stock requiereReposicion } descripcion categoria imagenUrl destacado etiqueta } }"
