@@ -8,6 +8,7 @@ private const val KEY_ACCESS = "auth_access"
 private const val KEY_REFRESH = "auth_refresh"          // heredado del backend anterior
 private const val KEY_USERNAME = "auth_username"
 private const val KEY_USER_ID = "auth_user_id"
+private const val KEY_ESCUELA_ID = "auth_escuela_id"
 private const val KEY_CAFETERIA_ID = "auth_cafeteria_id"
 private const val KEY_EXPIRES_AT = "auth_expires_at"
 private const val KEY_PHOTO_PATH = "auth_photo_path"
@@ -31,6 +32,7 @@ class SessionPreferences(context: Context) {
         appPreferences.putString(KEY_ACCESS, TokenCipher.encrypt(token))
         appPreferences.putString(KEY_USERNAME, usuario.nombre)
         appPreferences.putString(KEY_USER_ID, usuario.id)
+        appPreferences.putString(KEY_ESCUELA_ID, usuario.escuelaId)
         appPreferences.putString(KEY_CAFETERIA_ID, usuario.cafeteriaId)
         val expiraEn = System.currentTimeMillis() + expiraEnSegundos * 1000L
         appPreferences.putString(KEY_EXPIRES_AT, expiraEn.toString())
@@ -43,6 +45,7 @@ class SessionPreferences(context: Context) {
 
     fun username(): String? = appPreferences.getString(KEY_USERNAME)
     fun userId(): String? = appPreferences.getString(KEY_USER_ID)
+    fun escuelaId(): String? = appPreferences.getString(KEY_ESCUELA_ID)
     fun cafeteriaId(): String? = appPreferences.getString(KEY_CAFETERIA_ID)
 
     /** Guarda la ruta local del archivo de la foto de perfil. */
@@ -77,7 +80,7 @@ class SessionPreferences(context: Context) {
     /** Borra la sesion del dispositivo (logout). Sin sesion, la biometria no tiene que proteger. */
     fun clearSession() {
         appPreferences.remove(
-            KEY_ACCESS, KEY_REFRESH, KEY_USERNAME, KEY_USER_ID, KEY_CAFETERIA_ID,
+            KEY_ACCESS, KEY_REFRESH, KEY_USERNAME, KEY_USER_ID, KEY_ESCUELA_ID, KEY_CAFETERIA_ID,
             KEY_EXPIRES_AT, KEY_PHOTO_PATH, KEY_BIOMETRIC_ENABLED
         )
     }

@@ -69,6 +69,9 @@
     <string name="home_section_combos">Combos</string>
     <string name="home_section_extras">Extras</string>
     <string name="home_error_no_cafeteria">Your account has no cafeteria assigned.</string>
+    <string name="home_empty_no_escuela">No cafeterias to show. Your account has no school or cafeteria assigned.</string>
+    <string name="home_cafeteria_default_name">Cafeteria</string>
+    <string name="home_menu_empty">This cafeteria has no products available right now.</string>
     <string name="home_error_session_expired">Your session expired. Sign out from Profile and sign in again.</string>
     <string name="home_error_load">Couldn\'t load the menu. Try again.</string>
     <string name="home_error_refresh">Couldn\'t refresh. Try again.</string>

@@ -17,8 +17,12 @@ class AppPreferences(context: Context) {
     fun getString(key: String, default: String? = null): String? =
         prefs.getString(key, default)
 
-    fun putString(key: String, value: String) {
-        prefs.edit().putString(key, value).apply()
+    fun putString(key: String, value: String?) {
+        if (value == null) {
+            prefs.edit().remove(key).apply()
+        } else {
+            prefs.edit().putString(key, value).apply()
+        }
     }
 
     fun remove(vararg keys: String) {
