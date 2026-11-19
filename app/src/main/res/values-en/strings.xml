@@ -22,6 +22,7 @@
     <string name="login_error_fill_required">Fill in the required fields</string>
     <string name="login_error_wrong_credentials">Wrong email or password. Attempts left: %1$d</string>
     <string name="login_error_generic">Couldn\'t sign in. Try again.</string>
+    <string name="login_error_no_school">Your account has no school assigned, so you can\'t sign in.</string>
     <plurals name="login_error_locked">
         <item quantity="one">Too many failed attempts. Wait %1$d second.</item>
         <item quantity="other">Too many failed attempts. Wait %1$d seconds.</item>

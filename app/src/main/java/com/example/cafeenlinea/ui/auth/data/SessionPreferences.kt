@@ -59,6 +59,8 @@ class SessionPreferences(context: Context) {
     /** Hay sesion si hay token que se puede descifrar y todavia no ha expirado. */
     fun isLoggedIn(): Boolean {
         if (accessToken().isNullOrBlank()) return false
+        // Una sesión sin escuela no es válida: se trata como no iniciada
+        if (escuelaId().isNullOrBlank()) return false
         val expiraEn = appPreferences.getString(KEY_EXPIRES_AT)?.toLongOrNull() ?: return false
         return System.currentTimeMillis() < expiraEn
     }

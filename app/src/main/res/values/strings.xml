@@ -24,6 +24,7 @@
     <string name="login_error_fill_required">Completa los campos requeridos</string>
     <string name="login_error_wrong_credentials">Correo o contraseña incorrectos. Intentos restantes: %1$d</string>
     <string name="login_error_generic">No se pudo iniciar sesión. Intenta de nuevo.</string>
+    <string name="login_error_no_school">Tu cuenta no tiene una escuela asignada, así que no puedes entrar.</string>
     <plurals name="login_error_locked">
         <item quantity="one">Demasiados intentos fallidos. Espera %1$d segundo.</item>
         <item quantity="other">Demasiados intentos fallidos. Espera %1$d segundos.</item>
