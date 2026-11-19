@@ -19,6 +19,7 @@ import com.example.cafeenlinea.ui.main.MainScreen
 import com.example.cafeenlinea.ui.onboarding.data.OnboardingPreferences
 import com.example.cafeenlinea.ui.onboarding.view.OnboardingView
 import com.example.cafeenlinea.ui.auth.view.RegisterScreenView
+import com.example.cafeenlinea.ui.theme.CafeEnLineaTheme
 
 
 object NavRoutes {
@@ -54,13 +55,16 @@ fun AppNavHost(
         startDestination = startDestination
     ) {
         composable(NavRoutes.ONBOARDING) {
-            OnboardingView(
-                onFinishOnboarding = {
-                    navController.navigate(NavRoutes.LOGIN) {
-                        popUpTo(NavRoutes.ONBOARDING) { inclusive = true }
+            // El onboarding conserva su paleta original (no la clarita de adentro)
+            CafeEnLineaTheme(softLight = false) {
+                OnboardingView(
+                    onFinishOnboarding = {
+                        navController.navigate(NavRoutes.LOGIN) {
+                            popUpTo(NavRoutes.ONBOARDING) { inclusive = true }
+                        }
                     }
-                }
-            )
+                )
+            }
         }
 
         composable(NavRoutes.BIOMETRIC_LOCK) {
