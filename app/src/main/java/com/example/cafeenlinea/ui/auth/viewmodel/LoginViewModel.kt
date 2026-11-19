@@ -90,6 +90,16 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             }
             try {
                 val sesion = ApiClient.login(username.trim(), password)
+
+                // Sin escuela no se deja entrar
+                if (sesion.usuario.escuelaId.isNullOrBlank()) {
+                    runCatching { ApiClient.logout() }
+                    _uiState.update {
+                        it.copy(isLoading = false, error = str(R.string.login_error_no_school))
+                    }
+                    return@launch
+                }
+
                 session.saveSession(sesion.token, sesion.expiraEn, sesion.usuario)
 
                 // Exito: reiniciamos el contador de fallos
