@@ -67,9 +67,73 @@ private val LightColorScheme = lightColorScheme(
     outlineVariant = GreenLightest
 )
 
+// Modo claro de las pantallas de adentro (inicio, pedidos, carrito, perfil):
+// verde salvia con fondos crema y neutros cálidos.
+private val SoftLightColorScheme = lightColorScheme(
+    primary = SageDark,
+    onPrimary = Color.White,
+    primaryContainer = SageMist,
+    onPrimaryContainer = SageDeep,
+    secondary = Sage,
+    onSecondary = Color.White,
+    secondaryContainer = Taupe,
+    onSecondaryContainer = SageDeep,
+    tertiary = WarmGray,
+    onTertiary = Color.White,
+    tertiaryContainer = Cream,
+    onTertiaryContainer = SageDeep,
+    background = CreamLight,
+    onBackground = SageDeep,
+    surface = CreamLight,
+    onSurface = SageDeep,
+    surfaceVariant = Sand,
+    onSurfaceVariant = WarmGray,
+    surfaceContainerLowest = Color.White,
+    surfaceContainerLow = CreamLight,
+    surfaceContainer = Cream,
+    surfaceContainerHigh = Cream,
+    surfaceContainerHighest = Cream,
+    outline = Stone,
+    outlineVariant = Taupe
+)
+
+// Modo oscuro de las pantallas de adentro: la misma paleta salvia + crema.
+private val SoftDarkColorScheme = darkColorScheme(
+    primary = SageLight,
+    onPrimary = Night,
+    primaryContainer = SageNight,
+    onPrimaryContainer = SageMist,
+    secondary = Khaki,
+    onSecondary = Night,
+    secondaryContainer = SageNight,     // chips seleccionados y botón activo de la barra
+    onSecondaryContainer = CreamSoft,
+    tertiary = Taupe,
+    onTertiary = Night,
+    tertiaryContainer = Umber,
+    onTertiaryContainer = CreamSoft,
+    background = Night,
+    onBackground = CreamSoft,
+    surface = Night,
+    onSurface = CreamSoft,
+    surfaceVariant = NightHigh,
+    onSurfaceVariant = TaupeMuted,
+    surfaceContainerLowest = NightLowest,
+    surfaceContainerLow = NightLow,
+    surfaceContainer = NightBar,
+    surfaceContainerHigh = NightCard,
+    surfaceContainerHighest = NightCard,
+    outline = StoneDark,
+    outlineVariant = Umber
+)
+
+/**
+ * @param softLight usa la paleta salvia + crema (pantallas de adentro), en claro y en oscuro.
+ * El onboarding pasa false para conservar sus colores originales.
+ */
 @Composable
 fun CafeEnLineaTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    softLight: Boolean = true,
     // Dynamic color (Android 12+) is off so the app always uses the green palette
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
@@ -80,7 +144,9 @@ fun CafeEnLineaTheme(
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
 
+        darkTheme && softLight -> SoftDarkColorScheme
         darkTheme -> DarkColorScheme
+        softLight -> SoftLightColorScheme
         else -> LightColorScheme
     }
 
