@@ -9,6 +9,8 @@ fun mensajeDeError(e: Exception, accion: String): String = when (e) {
     is ApiException -> when (e.codigo) {
         "TOO_MANY_REQUESTS" -> e.message ?: "Has superado el límite de intentos. Espera unos momentos e intenta de nuevo."
         "FORBIDDEN" -> e.message ?: "No tienes permisos para realizar esta acción."
+        // La app pidió algo que el servidor desplegado todavía no tiene (ej. Unknown type ...)
+        "GRAPHQL_VALIDATION_FAILED" -> "El servidor todavía no tiene esta función. Intenta más tarde."
         else -> e.message ?: "Error del servidor"
     }
     else -> "No se pudo $accion. Intenta de nuevo."

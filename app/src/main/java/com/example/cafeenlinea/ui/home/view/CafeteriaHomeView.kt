@@ -43,7 +43,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.cafeenlinea.R
 import com.example.cafeenlinea.common.components.CafeLoading
+import com.example.cafeenlinea.ui.cart.model.CartItem
 import com.example.cafeenlinea.ui.cart.viewmodel.CartViewModel
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import com.example.cafeenlinea.ui.home.model.CafeteriaHomeUiState
 import com.example.cafeenlinea.ui.home.model.CafeteriaListItemUiState
 import com.example.cafeenlinea.ui.home.model.Extra
@@ -58,7 +61,9 @@ fun CafeteriaHomeView(
     cartViewModel: CartViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var selected by remember { mutableStateOf<Pair<DetailTarget, List<Extra>>?>(null) }
+    var selected by remember { mutableStateOf<ProductoElegido?>(null) }
+    val pendiente by cartViewModel.pendiente.collectAsState()
+    val carrito by cartViewModel.cafeteria.collectAsState()
 
     Scaffold(
         topBar = {
@@ -111,12 +116,15 @@ fun CafeteriaHomeView(
                             CafeteriaExpandableCard(
                                 item = item,
                                 visibleMenu = viewModel.menuVisible(item),
-                                cartViewModel = cartViewModel,
+                                // Cada producto se agrega con su cafetería: el pedido va a esa
+                                onAddToCart = { cartItem -> cartViewModel.addItem(cartItem, item.id, item.nombre) },
                                 onToggle = { viewModel.toggleExpand(item.id) },
                                 onRetry = { viewModel.reintentarMenu(item.id) },
                                 onSearch = { query -> viewModel.onSearchQueryChange(item.id, query) },
                                 onSectionSelected = { name -> viewModel.onSectionSelected(item.id, name) },
-                                onSelectProduct = { target, extras -> selected = target to extras }
+                                onSelectProduct = { target, extras ->
+                                    selected = ProductoElegido(target, extras, item.id, item.nombre)
+                                }
                             )
                         }
                     }
@@ -125,24 +133,59 @@ fun CafeteriaHomeView(
         }
     }
 
-    selected?.let { (target, extras) ->
+    selected?.let { elegido ->
         ProductDetailSheet(
-            target = target,
-            extras = extras,
+            target = elegido.target,
+            extras = elegido.extras,
             onDismiss = { selected = null },
             onAdd = { item ->
-                cartViewModel.addItem(item)
+                cartViewModel.addItem(item, elegido.cafeteriaId, elegido.cafeteriaNombre)
                 selected = null
+            }
+        )
+    }
+
+    // Un pedido va a una sola cafetería, como en Uber Eats o Rappi
+    pendiente?.let { producto ->
+        AlertDialog(
+            onDismissRequest = cartViewModel::dismissPending,
+            title = { Text(stringResource(R.string.cart_replace_title)) },
+            text = {
+                Text(
+                    stringResource(
+                        R.string.cart_replace_body,
+                        carrito?.nombre.orEmpty(),
+                        producto.cafeteria.nombre
+                    )
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = cartViewModel::replaceCartWithPending) {
+                    Text(stringResource(R.string.cart_replace_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = cartViewModel::dismissPending) {
+                    Text(stringResource(android.R.string.cancel))
+                }
             }
         )
     }
 }
 
+/** Producto abierto en el detalle, con la cafetería de donde se eligió. */
+private data class ProductoElegido(
+    val target: DetailTarget,
+    val extras: List<Extra>,
+    val cafeteriaId: String,
+    val cafeteriaNombre: String
+)
+
 @Composable
 private fun CafeteriaExpandableCard(
     item: CafeteriaListItemUiState,
     visibleMenu: CafeteriaHomeUiState?,
-    cartViewModel: CartViewModel,
+    onAddToCart: (CartItem) -> Unit,
     onToggle: () -> Unit,
     onRetry: () -> Unit,
     onSearch: (String) -> Unit,
@@ -207,7 +250,7 @@ private fun CafeteriaExpandableCard(
                     item.menu != null && visibleMenu != null -> {
                         CafeteriaMenuContent(
                             menu = visibleMenu,
-                            cartViewModel = cartViewModel,
+                            onAddToCart = onAddToCart,
                             onSearch = onSearch,
                             onSectionSelected = onSectionSelected,
                             onSelectProduct = onSelectProduct
@@ -222,7 +265,7 @@ private fun CafeteriaExpandableCard(
 @Composable
 private fun CafeteriaMenuContent(
     menu: CafeteriaHomeUiState,
-    cartViewModel: CartViewModel,
+    onAddToCart: (CartItem) -> Unit,
     onSearch: (String) -> Unit,
     onSectionSelected: (String?) -> Unit,
     onSelectProduct: (DetailTarget, List<Extra>) -> Unit
@@ -347,7 +390,7 @@ private fun CafeteriaMenuContent(
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(menu.combos) { ComboCard(it, cartViewModel = cartViewModel) }
+                items(menu.combos) { ComboCard(it, onAdd = onAddToCart) }
             }
             if (menu.combosNote.isNotBlank()) {
                 Text(

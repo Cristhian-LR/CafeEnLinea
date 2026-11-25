@@ -88,6 +88,9 @@
     <string name="cart_confirm">Place order</string>
     <string name="cart_empty">Your cart is empty</string>
     <string name="cart_item_note">Note: %1$s</string>
+    <string name="cart_replace_title">Start a new cart?</string>
+    <string name="cart_replace_body">Your cart has items from %1$s. To order from %2$s it has to be emptied, because each order is from a single cafeteria.</string>
+    <string name="cart_replace_confirm">Empty and add</string>
 
     <!-- Profile -->
     <string name="profile_title">Profile</string>
