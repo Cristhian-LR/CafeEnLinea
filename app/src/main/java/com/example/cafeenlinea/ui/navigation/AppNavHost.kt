@@ -6,6 +6,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -19,13 +22,20 @@ import com.example.cafeenlinea.ui.main.MainScreen
 import com.example.cafeenlinea.ui.onboarding.data.OnboardingPreferences
 import com.example.cafeenlinea.ui.onboarding.view.OnboardingView
 import com.example.cafeenlinea.ui.auth.view.RegisterScreenView
+import com.example.cafeenlinea.data.remote.ApiClient
+import com.example.cafeenlinea.ui.admin.AdminScreen
+import com.example.cafeenlinea.ui.auth.view.BusinessRegisterScreenView
+import com.example.cafeenlinea.ui.auth.viewmodel.BusinessRegisterViewModel
+import com.example.cafeenlinea.ui.owner.view.OwnerMainScreen
 import com.example.cafeenlinea.ui.theme.CafeEnLineaTheme
+import com.example.cafeenlinea.ui.vendor.VendorMainScreen
 
 
 object NavRoutes {
     const val ONBOARDING = "onboarding"
     const val LOGIN = "login"
     const val REGISTER = "register"
+    const val REGISTER_BUSINESS = "register_business"
     const val BIOMETRIC_LOCK = "biometric_lock"
     const val HOME = "home"
 }
@@ -103,19 +113,48 @@ fun AppNavHost(
             AfterAuthentication(sessionPreferences, onDone = goHome) { onAuthenticated ->
                 RegisterScreenView(
                     onRegisterSuccess = onAuthenticated,
+                    onBack = { navController.popBackStack() },
+                    onRegisterBusiness = { navController.navigate(NavRoutes.REGISTER_BUSINESS) }
+                )
+            }
+        }
+
+        // El dueño registra su cafetería (queda en revisión hasta que la plataforma la aprueba)
+        composable(NavRoutes.REGISTER_BUSINESS) {
+            val businessViewModel: BusinessRegisterViewModel = viewModel(
+                factory = viewModelFactory {
+                    initializer {
+                        BusinessRegisterViewModel(
+                            cargarEscuelas = ApiClient::escuelas,
+                            registrar = ApiClient::registrarMiCafeteria,
+                            guardarSesion = { s -> sessionPreferences.saveSession(s.token, s.expiraEn, s.usuario) }
+                        )
+                    }
+                }
+            )
+            AfterAuthentication(sessionPreferences, onDone = goHome) { onAuthenticated ->
+                BusinessRegisterScreenView(
+                    viewModel = businessViewModel,
+                    onRegistered = onAuthenticated,
                     onBack = { navController.popBackStack() }
                 )
             }
         }
 
         composable(NavRoutes.HOME) {
-            MainScreen(
-                onLogout = {
-                    navController.navigate(NavRoutes.LOGIN) {
-                        popUpTo(NavRoutes.HOME) { inclusive = true }
-                    }
+            val onLogout = {
+                navController.navigate(NavRoutes.LOGIN) {
+                    popUpTo(NavRoutes.HOME) { inclusive = true }
                 }
-            )
+            }
+            // Cada rol ve su pantalla: el vendedor su tablero, el dueño su negocio,
+            // la plataforma las cafeterías por aprobar y los alumnos el menú para pedir
+            when {
+                sessionPreferences.isPlatformAdmin() -> AdminScreen(onLogout = onLogout)
+                sessionPreferences.isOwner() -> OwnerMainScreen(onLogout = onLogout)
+                sessionPreferences.isVendor() -> VendorMainScreen(onLogout = onLogout)
+                else -> MainScreen(onLogout = onLogout)
+            }
         }
     }
 }

@@ -115,4 +115,20 @@ object CloudinaryUploader {
         )
         return uploadImageSigned(context, imageUri, firma)
     }
+
+    /**
+     * Foto de un producto del menú. El backend solo firma si el usuario puede
+     * gestionar productos de esa cafetería (vendedor o su jefe).
+     */
+    suspend fun uploadProductImage(
+        context: Context,
+        imageUri: Uri,
+        cafeteriaId: String
+    ): String {
+        val firma = ApiClient.solicitarFirmaSubida(
+            tipo = TipoRecursoImagen.PRODUCTO,
+            cafeteriaId = cafeteriaId
+        )
+        return uploadImageSigned(context, imageUri, firma)
+    }
 }

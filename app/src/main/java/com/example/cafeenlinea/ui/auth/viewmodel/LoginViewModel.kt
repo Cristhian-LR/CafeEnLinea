@@ -7,6 +7,7 @@ import com.example.cafeenlinea.data.remote.ApiClient
 import com.example.cafeenlinea.data.remote.ApiException
 import com.example.cafeenlinea.data.remote.SinConexionException
 import com.example.cafeenlinea.ui.auth.data.SessionPreferences
+import com.example.cafeenlinea.ui.auth.data.necesitaEscuela
 import com.example.cafeenlinea.ui.auth.model.LoginUiState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -91,8 +92,8 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val sesion = ApiClient.login(username.trim(), password)
 
-                // Sin escuela no se deja entrar
-                if (sesion.usuario.escuelaId.isNullOrBlank()) {
+                // Sin escuela no se deja entrar (el administrador de la plataforma no tiene)
+                if (necesitaEscuela(sesion.usuario.rol) && sesion.usuario.escuelaId.isNullOrBlank()) {
                     runCatching { ApiClient.logout() }
                     _uiState.update {
                         it.copy(isLoading = false, error = str(R.string.login_error_no_school))

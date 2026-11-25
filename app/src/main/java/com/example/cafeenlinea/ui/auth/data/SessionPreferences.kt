@@ -10,10 +10,18 @@ private const val KEY_USERNAME = "auth_username"
 private const val KEY_USER_ID = "auth_user_id"
 private const val KEY_ESCUELA_ID = "auth_escuela_id"
 private const val KEY_CAFETERIA_ID = "auth_cafeteria_id"
+private const val KEY_ROL = "auth_rol"
 private const val KEY_EXPIRES_AT = "auth_expires_at"
 private const val KEY_PHOTO_PATH = "auth_photo_path"
 private const val KEY_BIOMETRIC_ENABLED = "auth_biometric_enabled"
 private const val KEY_BIOMETRIC_OFFERED = "auth_biometric_offered"
+
+const val ROL_VENDEDOR = "VENDEDOR"
+const val ROL_JEFE = "JEFE"
+const val ROL_ADMIN_PLATAFORMA = "ADMIN_PLATAFORMA"
+
+/** El equipo de la plataforma no pertenece a ninguna escuela; todos los demás sí. */
+fun necesitaEscuela(rol: String?): Boolean = rol != ROL_ADMIN_PLATAFORMA
 
 /**
  * Sesion del usuario (token JWT + datos basicos) y preferencia de biometria.
@@ -34,6 +42,7 @@ class SessionPreferences(context: Context) {
         appPreferences.putString(KEY_USER_ID, usuario.id)
         appPreferences.putString(KEY_ESCUELA_ID, usuario.escuelaId)
         appPreferences.putString(KEY_CAFETERIA_ID, usuario.cafeteriaId)
+        appPreferences.putString(KEY_ROL, usuario.rol)
         val expiraEn = System.currentTimeMillis() + expiraEnSegundos * 1000L
         appPreferences.putString(KEY_EXPIRES_AT, expiraEn.toString())
     }
@@ -47,6 +56,16 @@ class SessionPreferences(context: Context) {
     fun userId(): String? = appPreferences.getString(KEY_USER_ID)
     fun escuelaId(): String? = appPreferences.getString(KEY_ESCUELA_ID)
     fun cafeteriaId(): String? = appPreferences.getString(KEY_CAFETERIA_ID)
+    fun rol(): String? = appPreferences.getString(KEY_ROL)
+
+    /** El vendedor ve su propia pantalla (pedidos, menú, inventario y resumen de su cafetería). */
+    fun isVendor(): Boolean = rol() == ROL_VENDEDOR && !cafeteriaId().isNullOrBlank()
+
+    /** El dueño de la cafetería: sus cafeterías, vendedores y el estado de su negocio. */
+    fun isOwner(): Boolean = rol() == ROL_JEFE
+
+    /** El equipo de la plataforma: aprueba las cafeterías que se registran. */
+    fun isPlatformAdmin(): Boolean = rol() == ROL_ADMIN_PLATAFORMA
 
     /** Guarda la ruta local del archivo de la foto de perfil. */
     fun saveProfilePhotoPath(path: String) {
@@ -59,8 +78,8 @@ class SessionPreferences(context: Context) {
     /** Hay sesion si hay token que se puede descifrar y todavia no ha expirado. */
     fun isLoggedIn(): Boolean {
         if (accessToken().isNullOrBlank()) return false
-        // Una sesión sin escuela no es válida: se trata como no iniciada
-        if (escuelaId().isNullOrBlank()) return false
+        // Una sesión sin escuela no es válida (salvo el administrador de la plataforma)
+        if (necesitaEscuela(rol()) && escuelaId().isNullOrBlank()) return false
         val expiraEn = appPreferences.getString(KEY_EXPIRES_AT)?.toLongOrNull() ?: return false
         return System.currentTimeMillis() < expiraEn
     }
@@ -82,7 +101,7 @@ class SessionPreferences(context: Context) {
     /** Borra la sesion del dispositivo (logout). Sin sesion, la biometria no tiene que proteger. */
     fun clearSession() {
         appPreferences.remove(
-            KEY_ACCESS, KEY_REFRESH, KEY_USERNAME, KEY_USER_ID, KEY_ESCUELA_ID, KEY_CAFETERIA_ID,
+            KEY_ACCESS, KEY_REFRESH, KEY_USERNAME, KEY_USER_ID, KEY_ESCUELA_ID, KEY_CAFETERIA_ID, KEY_ROL,
             KEY_EXPIRES_AT, KEY_PHOTO_PATH, KEY_BIOMETRIC_ENABLED
         )
     }
