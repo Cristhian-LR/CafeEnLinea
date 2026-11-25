@@ -18,7 +18,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.cafeenlinea.ui.cart.model.CartItem
-import com.example.cafeenlinea.ui.cart.viewmodel.CartViewModel
 import com.example.cafeenlinea.ui.home.model.Combo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -27,7 +26,7 @@ import com.example.cafeenlinea.R
 @Composable
 fun ComboCard(
     combo: Combo,
-    cartViewModel: CartViewModel,
+    onAdd: (CartItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -67,7 +66,7 @@ fun ComboCard(
                 )
                 Button(
                     onClick = {
-                        cartViewModel.addItem(
+                        onAdd(
                             CartItem(
                                 id = "combo_${combo.id}",
                                 name = combo.name,

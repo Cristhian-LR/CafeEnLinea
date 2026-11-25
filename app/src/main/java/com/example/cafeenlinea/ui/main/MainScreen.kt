@@ -137,7 +137,8 @@ fun MainScreen(
                 CartView(
                     cartViewModel = cartViewModel,
                     onCheckout = {
-                        cartViewModel.confirmOrder(session.userId(), session.cafeteriaId())
+                        // La cafetería sale del carrito: los alumnos no tienen una en su cuenta
+                        cartViewModel.confirmOrder(session.userId())
                     }
                 )
             }

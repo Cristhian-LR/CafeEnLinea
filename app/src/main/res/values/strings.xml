@@ -91,6 +91,9 @@
     <string name="cart_confirm">Confirmar pedido</string>
     <string name="cart_empty">Tu carrito está vacío</string>
     <string name="cart_item_note">Nota: %1$s</string>
+    <string name="cart_replace_title">¿Empezar un carrito nuevo?</string>
+    <string name="cart_replace_body">Tu carrito tiene productos de %1$s. Para pedir en %2$s hay que vaciarlo, porque cada pedido es de una sola cafetería.</string>
+    <string name="cart_replace_confirm">Vaciar y agregar</string>
 
     <!-- Perfil -->
     <string name="profile_title">Perfil</string>
