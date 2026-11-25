@@ -4,7 +4,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.example.cafeenlinea.ui.auth.data.SessionPreferences
 import com.example.cafeenlinea.ui.auth.data.TokenCipher
-import com.example.cafeenlinea.ui.auth.model.UserDto
+import com.example.cafeenlinea.data.remote.Usuario
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -50,21 +50,25 @@ class TokenCipherTest {
         assertNull(TokenCipher.decrypt("abc:def"))
     }
 
+    // El backend GraphQL entrega un solo token con vida en segundos (sin refresh)
+    private val usuario = Usuario(
+        id = "u1", nombre = "mario", correo = "m@x.com", escuelaId = "e1", cafeteriaId = null
+    )
+
     @Test
     fun sessionPreferences_storesTokensEncrypted() {
-        session.saveSession("access-123", "refresh-456", UserDto(1, "mario", "m@x.com"))
+        session.saveSession("access-123", 3600, usuario)
 
         assertEquals("access-123", session.accessToken())
-        assertEquals("refresh-456", session.refreshToken())
         assertTrue(session.isLoggedIn())
 
-        val raw = context.getSharedPreferences("app_prefs", 0).getString("auth_refresh", null)
-        assertNotEquals("refresh-456", raw)
+        val raw = context.getSharedPreferences("app_prefs", 0).getString("auth_access", null)
+        assertNotEquals("access-123", raw)
     }
 
     @Test
     fun clearSession_turnsOffBiometrics() {
-        session.saveSession("a", "r", UserDto(1, "mario", "m@x.com"))
+        session.saveSession("a", 3600, usuario)
         session.setBiometricEnabled(true)
 
         session.clearSession()
