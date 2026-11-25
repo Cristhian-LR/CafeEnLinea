@@ -26,12 +26,20 @@ data class Usuario(
     val correo: String,
     val escuelaId: String? = null,
     val cafeteriaId: String?,
-    val fotoPerfilUrl: String? = null
+    val fotoPerfilUrl: String? = null,
+    /** CLIENTE, VENDEDOR, JEFE, ADMIN_ESCUELA o ADMIN_PLATAFORMA. */
+    val rol: String? = null
 )
 data class Sesion(val token: String, val expiraEn: Int, val usuario: Usuario)
-data class Escuela(val id: String, val clave: String, val nombre: String)
+data class Escuela(val id: String, val clave: String, val nombre: String, val ciudad: String = "")
 data class Cafeteria(val id: String, val nombre: String)
-data class Inventario(val stock: Int, val requiereReposicion: Boolean)
+data class Inventario(
+    val stock: Int,
+    val requiereReposicion: Boolean,
+    /** Con este stock o menos, el producto aparece en "por reponer". */
+    val puntoReorden: Int = 0,
+    val cantidadReposicion: Int = 0
+)
 data class Producto(
     val id: String,
     val nombre: String,
@@ -42,10 +50,77 @@ data class Producto(
     val categoria: String,
     val imagenUrl: String?,      // URL de Cloudinary; null si el producto no tiene imagen
     val destacado: Boolean,
-    val etiqueta: String
+    val etiqueta: String,
+    val tiempoPreparacionMin: Int = 5
 )
 data class ItemPedido(val nombreProducto: String, val cantidad: Int, val precioUnitario: Dinero? = null)
-data class Pedido(val id: String, val estado: String, val total: Dinero? = null, val items: List<ItemPedido> = emptyList())
+data class Pedido(
+    val id: String,
+    val estado: String,
+    val total: Dinero? = null,
+    val items: List<ItemPedido> = emptyList(),
+    // Solo los piden las consultas del vendedor; en las demás llegan null
+    val notas: String? = null,
+    val horaRecogida: String? = null,
+    val tiempoEstimadoMin: Int? = null,
+    val creadoEn: String? = null,
+    val historial: List<CambioEstado>? = null
+)
+/** Un cambio de estado del pedido, con su fecha ISO. */
+data class CambioEstado(val estado: String, val fecha: String)
+
+/** Cafetería vista por su dueño o por el administrador (incluye las que aún no ven los alumnos). */
+data class CafeteriaNegocio(
+    val id: String,
+    val nombre: String,
+    val ubicacion: String? = null,
+    val activa: Boolean = false,
+    val escuela: Escuela? = null
+)
+
+/**
+ * Negocio de un dueño (JEFE). [estado]: EN_REVISION, APROBADO o RECHAZADO.
+ * Mientras no esté aprobado, sus cafeterías no aparecen a los alumnos.
+ */
+data class Negocio(
+    val id: String,
+    val nombre: String,
+    val estado: String,
+    val motivoRechazo: String? = null,
+    val creadoEn: String? = null,
+    val dueno: Usuario? = null,
+    val cafeterias: List<CafeteriaNegocio>? = null
+)
+data class RegistroNegocioPayload(val negocio: Negocio, val sesion: Sesion)
+
+/** Datos del registro de una cafetería por su dueño. La escuela va por id o por nombre. */
+data class RegistroCafeteriaInput(
+    val nombreDueno: String,
+    val correo: String,
+    val password: String,
+    val nombreNegocio: String,
+    val nombreCafeteria: String,
+    val ubicacion: String,
+    val escuelaId: String?,
+    val nombreEscuela: String,
+    val ciudadEscuela: String?
+)
+
+/** Datos para crear o editar un producto desde la pantalla del vendedor. */
+data class ProductoInput(
+    val nombre: String,
+    val precio: Double,
+    val moneda: String,
+    val categoria: String,
+    val descripcion: String,
+    val tiempoPreparacionMin: Int,
+    val destacado: Boolean,
+    val etiqueta: String,
+    val imagenUrl: String?,
+    /** Solo al crear: el servidor exige inventario inicial. */
+    val stockInicial: Int,
+    val puntoReorden: Int
+)
 
 enum class TipoRecursoImagen {
     PRODUCTO,
@@ -84,11 +159,12 @@ internal interface GraphQLService {
 // ---------------------------------------------------------------------------
 // Consultas (una sola linea cada una; "\$" es el simbolo $ de GraphQL en Kotlin)
 // ---------------------------------------------------------------------------
-private const val Q_LOGIN = "mutation(\$correo: String!, \$password: String!) { login(correo: \$correo, password: \$password) { token expiraEn usuario { id nombre correo escuelaId cafeteriaId } } }"
-private const val Q_REGISTRO = "mutation(\$nombre: String!, \$correo: String!, \$password: String!, \$cafeteriaId: ID!) { registro(nombre: \$nombre, correo: \$correo, password: \$password, cafeteriaId: \$cafeteriaId) { token expiraEn usuario { id nombre correo escuelaId cafeteriaId } } }"
+private const val Q_LOGIN = "mutation(\$correo: String!, \$password: String!) { login(correo: \$correo, password: \$password) { token expiraEn usuario { id nombre correo rol escuelaId cafeteriaId } } }"
+private const val Q_REGISTRO = "mutation(\$nombre: String!, \$correo: String!, \$password: String!, \$escuelaId: ID!) { registro(nombre: \$nombre, correo: \$correo, password: \$password, escuelaId: \$escuelaId) { token expiraEn usuario { id nombre correo rol escuelaId cafeteriaId } } }"
+private const val Q_REGISTRO_ESCUELA_NUEVA = "mutation(\$nombre: String!, \$correo: String!, \$password: String!, \$nombreEscuela: String!, \$ciudadEscuela: String) { registro(nombre: \$nombre, correo: \$correo, password: \$password, nombreEscuela: \$nombreEscuela, ciudadEscuela: \$ciudadEscuela) { token expiraEn usuario { id nombre correo rol escuelaId cafeteriaId } } }"
 private const val Q_LOGOUT = "mutation { logout }"
-private const val Q_ME = "query { me { id nombre correo escuelaId cafeteriaId fotoPerfilUrl } }"
-private const val Q_ESCUELAS = "query { escuelas { id clave nombre } }"
+private const val Q_ME = "query { me { id nombre correo rol escuelaId cafeteriaId fotoPerfilUrl } }"
+private const val Q_ESCUELAS = "query { escuelas { id clave nombre ciudad } }"
 private const val Q_CAFETERIAS = "query(\$escuelaId: ID!) { cafeteriasPorEscuela(escuelaId: \$escuelaId) { id nombre } }"
 private const val Q_PRODUCTOS = "query(\$cafeteriaId: ID!) { productosPorCafeteria(cafeteriaId: \$cafeteriaId) { id nombre disponible precio { monto moneda } inventario { stock requiereReposicion } descripcion categoria imagenUrl destacado etiqueta } }"
 private const val Q_CAFETERIA = "query(\$id: ID!) { cafeteria(id: \$id) { id nombre } }"
@@ -96,6 +172,33 @@ private const val Q_CREAR_PEDIDO = "mutation(\$usuarioId: ID!, \$cafeteriaId: ID
 private const val Q_PEDIDOS = "query(\$usuarioId: ID!) { pedidosPorUsuario(usuarioId: \$usuarioId) { id estado total { monto moneda } items { nombreProducto cantidad } } }"
 private const val M_SOLICITAR_FIRMA = "mutation(\$tipo: TipoRecursoImagen!, \$cafeteriaId: ID) { solicitarFirmaSubida(tipo: \$tipo, cafeteriaId: \$cafeteriaId) { signature timestamp apiKey cloudName folder uploadPreset } }"
 private const val M_ACTUALIZAR_FOTO_PERFIL = "mutation(\$fotoUrl: String!) { actualizarFotoPerfil(fotoUrl: \$fotoUrl) { id nombre correo cafeteriaId fotoPerfilUrl } }"
+
+// ---- Vendedor ----
+private const val CAMPOS_PEDIDO_VENDEDOR = "id estado total { monto moneda } items { nombreProducto cantidad } notas horaRecogida tiempoEstimadoMin"
+private const val CAMPOS_PRODUCTO_VENDEDOR = "id nombre disponible precio { monto moneda } inventario { stock requiereReposicion puntoReorden cantidadReposicion } descripcion categoria imagenUrl destacado etiqueta tiempoPreparacionMin"
+private const val Q_COLA = "query(\$cafeteriaId: ID!) { colaCafeteria(cafeteriaId: \$cafeteriaId) { $CAMPOS_PEDIDO_VENDEDOR } }"
+private const val M_ESTADO_PEDIDO = "mutation(\$pedidoId: ID!, \$nuevoEstado: String!, \$codigoRecogida: String) { actualizarEstadoPedido(pedidoId: \$pedidoId, nuevoEstado: \$nuevoEstado, codigoRecogida: \$codigoRecogida) { $CAMPOS_PEDIDO_VENDEDOR } }"
+private const val Q_PRODUCTOS_VENDEDOR = "query(\$cafeteriaId: ID!) { productosPorCafeteria(cafeteriaId: \$cafeteriaId) { $CAMPOS_PRODUCTO_VENDEDOR } }"
+private const val M_REGISTRAR_PRODUCTO = "mutation(\$nombre: String!, \$precio: DineroInput!, \$inventario: InventarioInput!, \$cafeteriaId: ID!, \$descripcion: String, \$categoria: String, \$imagenUrl: String, \$destacado: Boolean, \$etiqueta: String, \$tiempoPreparacionMin: Int) { registrarProducto(nombre: \$nombre, precio: \$precio, inventario: \$inventario, cafeteriaId: \$cafeteriaId, descripcion: \$descripcion, categoria: \$categoria, imagenUrl: \$imagenUrl, destacado: \$destacado, etiqueta: \$etiqueta, tiempoPreparacionMin: \$tiempoPreparacionMin) { $CAMPOS_PRODUCTO_VENDEDOR } }"
+private const val M_ACTUALIZAR_PRODUCTO = "mutation(\$productoId: ID!, \$cambios: ProductoCambiosInput!) { actualizarProducto(productoId: \$productoId, cambios: \$cambios) { $CAMPOS_PRODUCTO_VENDEDOR } }"
+private const val M_DISPONIBILIDAD = "mutation(\$productoId: ID!, \$disponible: Boolean!) { cambiarDisponibilidadProducto(productoId: \$productoId, disponible: \$disponible) { $CAMPOS_PRODUCTO_VENDEDOR } }"
+private const val Q_POR_REPONER = "query(\$cafeteriaId: ID!) { productosPorReponer(cafeteriaId: \$cafeteriaId) { $CAMPOS_PRODUCTO_VENDEDOR } }"
+private const val M_REPONER = "mutation(\$productoId: ID!, \$cantidad: Int) { reponerInventario(productoId: \$productoId, cantidad: \$cantidad) { $CAMPOS_PRODUCTO_VENDEDOR } }"
+// ---- Negocios (dueño y administrador de la plataforma) ----
+private const val CAMPOS_SESION = "token expiraEn usuario { id nombre correo rol escuelaId cafeteriaId }"
+private const val CAMPOS_NEGOCIO = "id nombre estado motivoRechazo creadoEn dueno { id nombre correo cafeteriaId } cafeterias { id nombre ubicacion activa escuela { id clave nombre ciudad } }"
+private const val CAMPOS_CAFETERIA_NEGOCIO = "id nombre ubicacion activa escuela { id clave nombre ciudad }"
+private const val M_REGISTRAR_MI_CAFETERIA = "mutation(\$input: RegistroCafeteriaInput!) { registrarMiCafeteria(input: \$input) { negocio { $CAMPOS_NEGOCIO } sesion { $CAMPOS_SESION } } }"
+private const val Q_MI_NEGOCIO = "query { miNegocio { $CAMPOS_NEGOCIO } }"
+private const val Q_MIS_VENDEDORES = "query { misVendedores { id nombre correo cafeteriaId } }"
+private const val M_REGISTRAR_VENDEDOR = "mutation(\$cafeteriaId: ID!, \$cuenta: CuentaInput!) { registrarVendedor(cafeteriaId: \$cafeteriaId, cuenta: \$cuenta) { id nombre correo cafeteriaId } }"
+private const val M_REGISTRAR_CAFETERIA = "mutation(\$nombre: String!, \$ubicacion: String, \$escuelaId: ID, \$nombreEscuela: String, \$ciudadEscuela: String) { registrarCafeteria(nombre: \$nombre, ubicacion: \$ubicacion, escuelaId: \$escuelaId, nombreEscuela: \$nombreEscuela, ciudadEscuela: \$ciudadEscuela) { $CAMPOS_CAFETERIA_NEGOCIO } }"
+private const val Q_NEGOCIOS_POR_ESTADO = "query(\$estado: EstadoNegocio!) { negociosPorEstado(estado: \$estado) { $CAMPOS_NEGOCIO } }"
+private const val M_APROBAR_NEGOCIO = "mutation(\$negocioId: ID!) { aprobarNegocio(negocioId: \$negocioId) { $CAMPOS_NEGOCIO } }"
+private const val M_RECHAZAR_NEGOCIO = "mutation(\$negocioId: ID!, \$motivo: String!) { rechazarNegocio(negocioId: \$negocioId, motivo: \$motivo) { $CAMPOS_NEGOCIO } }"
+
+// El vendedor no tiene permiso de reportes (es del JEFE): el resumen se calcula con sus pedidos
+private const val Q_PEDIDOS_CAFETERIA = "query(\$cafeteriaId: ID!) { pedidosPorCafeteria(cafeteriaId: \$cafeteriaId) { id estado creadoEn total { monto moneda } items { nombreProducto cantidad precioUnitario { monto moneda } } historial { estado fecha } } }"
 
 object ApiClient {
 
@@ -141,14 +244,30 @@ object ApiClient {
         return sesion
     }
 
-    /** Crea la cuenta y deja la sesion iniciada (el servidor responde igual que en login). */
-    suspend fun registro(nombre: String, correo: String, password: String, cafeteriaId: String): Sesion {
+    /**
+     * Crea la cuenta y deja la sesion iniciada (el servidor responde igual que en login).
+     * Con [escuelaId] usa una escuela del catalogo; sin el, el servidor busca la escuela
+     * por [nombreEscuela] y, si no existe, la crea con [ciudadEscuela] y la agrega al catalogo.
+     */
+    suspend fun registro(
+        nombre: String,
+        correo: String,
+        password: String,
+        escuelaId: String?,
+        nombreEscuela: String,
+        ciudadEscuela: String?
+    ): Sesion {
         token = null
-        val sesion: Sesion = ejecutar(
-            "registro", Q_REGISTRO,
-            mapOf("nombre" to nombre, "correo" to correo, "password" to password, "cafeteriaId" to cafeteriaId),
-            sesionRequerida = false
-        )
+        val cuenta = mapOf("nombre" to nombre, "correo" to correo, "password" to password)
+        val sesion: Sesion = if (escuelaId != null) {
+            ejecutar("registro", Q_REGISTRO, cuenta + ("escuelaId" to escuelaId), sesionRequerida = false)
+        } else {
+            ejecutar(
+                "registro", Q_REGISTRO_ESCUELA_NUEVA,
+                cuenta + mapOf("nombreEscuela" to nombreEscuela, "ciudadEscuela" to ciudadEscuela),
+                sesionRequerida = false
+            )
+        }
         token = sesion.token
         return sesion
     }
@@ -222,6 +341,147 @@ object ApiClient {
         query = M_ACTUALIZAR_FOTO_PERFIL,
         variables = mapOf("fotoUrl" to fotoUrl)
     )
+
+    // -------------------------------------------------------------------
+    // Vendedor: cola de pedidos, menu, inventario y reportes de su cafeteria
+    // -------------------------------------------------------------------
+
+    /** Pedidos activos (PENDIENTE, ACEPTADO, EN_PREPARACION, LISTO) por hora de recogida. */
+    suspend fun colaCafeteria(cafeteriaId: String): List<Pedido> =
+        ejecutar("colaCafeteria", Q_COLA, mapOf("cafeteriaId" to cafeteriaId))
+
+    /** Para ENTREGADO el servidor exige el [codigoRecogida] que muestra el comprador. */
+    suspend fun actualizarEstadoPedido(pedidoId: String, nuevoEstado: String, codigoRecogida: String? = null): Pedido =
+        ejecutar(
+            "actualizarEstadoPedido", M_ESTADO_PEDIDO,
+            mapOf("pedidoId" to pedidoId, "nuevoEstado" to nuevoEstado, "codigoRecogida" to codigoRecogida)
+        )
+
+    /** Todos los productos de la cafeteria, también los pausados (a diferencia del menú del cliente). */
+    suspend fun productosVendedor(cafeteriaId: String): List<Producto> =
+        ejecutar("productosPorCafeteria", Q_PRODUCTOS_VENDEDOR, mapOf("cafeteriaId" to cafeteriaId))
+
+    suspend fun registrarProducto(cafeteriaId: String, datos: ProductoInput): Producto =
+        ejecutar(
+            "registrarProducto", M_REGISTRAR_PRODUCTO,
+            mapOf(
+                "cafeteriaId" to cafeteriaId,
+                "nombre" to datos.nombre,
+                "precio" to mapOf("monto" to datos.precio, "moneda" to datos.moneda),
+                "inventario" to mapOf(
+                    "stock" to datos.stockInicial,
+                    "puntoReorden" to datos.puntoReorden,
+                    // Al reponer sin cantidad se suma esto; se toma el stock inicial como referencia
+                    "cantidadReposicion" to datos.stockInicial.coerceAtLeast(1)
+                ),
+                "descripcion" to datos.descripcion,
+                "categoria" to datos.categoria,
+                "imagenUrl" to datos.imagenUrl,
+                "destacado" to datos.destacado,
+                "etiqueta" to datos.etiqueta,
+                "tiempoPreparacionMin" to datos.tiempoPreparacionMin
+            )
+        )
+
+    /** Edita un producto. El inventario no se cambia aquí (se usa [reponerInventario]). */
+    suspend fun actualizarProducto(productoId: String, datos: ProductoInput): Producto =
+        ejecutar(
+            "actualizarProducto", M_ACTUALIZAR_PRODUCTO,
+            mapOf(
+                "productoId" to productoId,
+                "cambios" to mapOf(
+                    "nombre" to datos.nombre,
+                    "precio" to mapOf("monto" to datos.precio, "moneda" to datos.moneda),
+                    "descripcion" to datos.descripcion,
+                    "categoria" to datos.categoria,
+                    // "" quita la imagen; el servidor ignora null
+                    "imagenUrl" to (datos.imagenUrl ?: ""),
+                    "destacado" to datos.destacado,
+                    "etiqueta" to datos.etiqueta,
+                    "tiempoPreparacionMin" to datos.tiempoPreparacionMin
+                )
+            )
+        )
+
+    suspend fun cambiarDisponibilidadProducto(productoId: String, disponible: Boolean): Producto =
+        ejecutar(
+            "cambiarDisponibilidadProducto", M_DISPONIBILIDAD,
+            mapOf("productoId" to productoId, "disponible" to disponible)
+        )
+
+    suspend fun productosPorReponer(cafeteriaId: String): List<Producto> =
+        ejecutar("productosPorReponer", Q_POR_REPONER, mapOf("cafeteriaId" to cafeteriaId))
+
+    /** Suma [cantidad] al stock; sin cantidad usa la cantidad de reposición del producto. */
+    suspend fun reponerInventario(productoId: String, cantidad: Int?): Producto =
+        ejecutar("reponerInventario", M_REPONER, mapOf("productoId" to productoId, "cantidad" to cantidad))
+
+    /** Todos los pedidos de la cafetería (también entregados y cancelados), con su historial. */
+    suspend fun pedidosCafeteria(cafeteriaId: String): List<Pedido> =
+        ejecutar("pedidosPorCafeteria", Q_PEDIDOS_CAFETERIA, mapOf("cafeteriaId" to cafeteriaId))
+
+    // -------------------------------------------------------------------
+    // Negocios: alta de cafeterías por su dueño y aprobación de la plataforma
+    // -------------------------------------------------------------------
+
+    /** Crea el negocio (en revisión), su primera cafetería y la cuenta del dueño; deja la sesión iniciada. */
+    suspend fun registrarMiCafeteria(datos: RegistroCafeteriaInput): Sesion {
+        token = null
+        val input = mapOf(
+            "dueno" to mapOf("nombre" to datos.nombreDueno, "correo" to datos.correo, "password" to datos.password),
+            "nombreNegocio" to datos.nombreNegocio,
+            "nombreCafeteria" to datos.nombreCafeteria,
+            "ubicacion" to datos.ubicacion,
+            "escuelaId" to datos.escuelaId,
+            "nombreEscuela" to datos.nombreEscuela.takeIf { datos.escuelaId == null },
+            "ciudadEscuela" to datos.ciudadEscuela
+        )
+        val payload: RegistroNegocioPayload = ejecutar(
+            "registrarMiCafeteria", M_REGISTRAR_MI_CAFETERIA, mapOf("input" to input), sesionRequerida = false
+        )
+        token = payload.sesion.token
+        return payload.sesion
+    }
+
+    suspend fun miNegocio(): Negocio = ejecutar("miNegocio", Q_MI_NEGOCIO)
+
+    suspend fun misVendedores(): List<Usuario> = ejecutar("misVendedores", Q_MIS_VENDEDORES)
+
+    suspend fun registrarVendedor(cafeteriaId: String, nombre: String, correo: String, password: String): Usuario =
+        ejecutar(
+            "registrarVendedor", M_REGISTRAR_VENDEDOR,
+            mapOf(
+                "cafeteriaId" to cafeteriaId,
+                "cuenta" to mapOf("nombre" to nombre, "correo" to correo, "password" to password)
+            )
+        )
+
+    /** Abre otra cafetería del negocio. La escuela va por [escuelaId] o por [nombreEscuela] (se crea si es nueva). */
+    suspend fun registrarCafeteria(
+        nombre: String,
+        ubicacion: String,
+        escuelaId: String?,
+        nombreEscuela: String,
+        ciudadEscuela: String?
+    ): CafeteriaNegocio = ejecutar(
+        "registrarCafeteria", M_REGISTRAR_CAFETERIA,
+        mapOf(
+            "nombre" to nombre,
+            "ubicacion" to ubicacion,
+            "escuelaId" to escuelaId,
+            "nombreEscuela" to nombreEscuela.takeIf { escuelaId == null },
+            "ciudadEscuela" to ciudadEscuela
+        )
+    )
+
+    suspend fun negociosPorEstado(estado: String): List<Negocio> =
+        ejecutar("negociosPorEstado", Q_NEGOCIOS_POR_ESTADO, mapOf("estado" to estado))
+
+    suspend fun aprobarNegocio(negocioId: String): Negocio =
+        ejecutar("aprobarNegocio", M_APROBAR_NEGOCIO, mapOf("negocioId" to negocioId))
+
+    suspend fun rechazarNegocio(negocioId: String, motivo: String): Negocio =
+        ejecutar("rechazarNegocio", M_RECHAZAR_NEGOCIO, mapOf("negocioId" to negocioId, "motivo" to motivo))
 
     // -------------------------------------------------------------------
     // Envia la consulta y traduce los fallos a excepciones claras para la UI

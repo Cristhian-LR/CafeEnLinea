@@ -19,12 +19,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,7 +37,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
@@ -59,13 +57,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.TextButton
 
-private val BgWhite = Color(0xFFFFFFFF)
-private val Ink = Color(0xFF1B3A2B)
-private val Brand = Color(0xFF2D5A3D)
-private val Muted = Color(0xFF8DB596)
-private val HairlineBorder = Color(0xFFE3E7E4)
-private val ErrorRed = Color(0xFFC1443A)
-
 /** Espacio entre los puntos de la contraseña oculta. Más negativo = más juntos. */
 internal val PasswordDotSpacing = (-1).sp
 
@@ -76,6 +67,7 @@ fun LoginScreenView(
     viewModel: LoginViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val colors = MaterialTheme.colorScheme
     var passwordVisible by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
@@ -89,7 +81,7 @@ fun LoginScreenView(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BgWhite)
+            .background(colors.background)
             // C01: Tocar fuera quita foco y oculta teclado
             .pointerInput(Unit) {
                 detectTapGestures(onTap = { focusManager.clearFocus() })
@@ -115,7 +107,7 @@ fun LoginScreenView(
 
             Text(
                 text = stringResource(R.string.app_display_name),
-                color = Ink,
+                color = colors.onBackground,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 24.sp
             )
@@ -124,7 +116,7 @@ fun LoginScreenView(
 
             Text(
                 text = stringResource(R.string.login_tagline),
-                color = Muted,
+                color = colors.onSurfaceVariant,
                 fontSize = 14.sp
             )
 
@@ -140,7 +132,7 @@ fun LoginScreenView(
                 isError = uiState.usernameError != null,
                 supportingText = {
                     uiState.usernameError?.let { err ->
-                        Text(text = err, color = ErrorRed, fontSize = 12.sp)
+                        Text(text = err, color = colors.error, fontSize = 12.sp)
                     }
                 },
                 keyboardOptions = KeyboardOptions(
@@ -152,13 +144,7 @@ fun LoginScreenView(
                     onNext = { passwordFocusRequester.requestFocus() }
                 ),
                 shape = RoundedCornerShape(10.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Brand,
-                    unfocusedBorderColor = HairlineBorder,
-                    focusedLabelColor = Brand,
-                    cursorColor = Brand,
-                    errorBorderColor = ErrorRed
-                ),
+                colors = authFieldColors(),
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -174,7 +160,7 @@ fun LoginScreenView(
                 isError = uiState.passwordError != null,
                 supportingText = {
                     uiState.passwordError?.let { err ->
-                        Text(text = err, color = ErrorRed, fontSize = 12.sp)
+                        Text(text = err, color = colors.error, fontSize = 12.sp)
                     }
                 },
                 keyboardOptions = KeyboardOptions(
@@ -192,13 +178,7 @@ fun LoginScreenView(
                     }
                 ),
                 shape = RoundedCornerShape(10.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Brand,
-                    unfocusedBorderColor = HairlineBorder,
-                    focusedLabelColor = Brand,
-                    cursorColor = Brand,
-                    errorBorderColor = ErrorRed
-                ),
+                colors = authFieldColors(),
                 // Los puntos ocultos se veían muy separados por el letterSpacing del tema.
                 textStyle = if (passwordVisible) {
                     LocalTextStyle.current
@@ -219,7 +199,7 @@ fun LoginScreenView(
                                 Icons.Filled.Visibility
                             },
                             contentDescription = if (passwordVisible) stringResource(R.string.cd_hide_password) else stringResource(R.string.cd_show_password),
-                            tint = Muted
+                            tint = colors.onSurfaceVariant
                         )
                     }
                 },
@@ -233,7 +213,7 @@ fun LoginScreenView(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = uiState.error!!,
-                    color = ErrorRed,
+                    color = colors.error,
                     fontSize = 13.sp
                 )
             }
@@ -249,12 +229,7 @@ fun LoginScreenView(
                 },
                 enabled = uiState.isButtonEnabled,
                 shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Brand,
-                    contentColor = Color.White,
-                    disabledContainerColor = Brand.copy(alpha = 0.4f),
-                    disabledContentColor = Color.White.copy(alpha = 0.7f)
-                ),
+                colors = authButtonColors(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
@@ -275,9 +250,9 @@ fun LoginScreenView(
             if (!uiState.isLoading) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(stringResource(R.string.login_no_account), color = Muted, fontSize = 14.sp)
+                    Text(stringResource(R.string.login_no_account), color = colors.onSurfaceVariant, fontSize = 14.sp)
                     TextButton(onClick = onNavigateToRegister) {
-                        Text(stringResource(R.string.login_go_register), color = Brand, fontWeight = FontWeight.Medium)
+                        Text(stringResource(R.string.login_go_register), color = colors.primary, fontWeight = FontWeight.Medium)
                     }
                 }
             }
@@ -287,7 +262,7 @@ fun LoginScreenView(
                 Text(
                     text = stringResource(R.string.login_connecting),
                     fontSize = 12.sp,
-                    color = Muted
+                    color = colors.onSurfaceVariant
                 )
             }
         }

@@ -1,31 +1,28 @@
 package com.example.cafeenlinea.ui.auth.viewmodel
 
 import android.app.Application
-import android.util.Patterns
 import androidx.annotation.StringRes
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.cafeenlinea.R
 import com.example.cafeenlinea.data.remote.ApiClient
 import com.example.cafeenlinea.data.remote.ApiException
-import com.example.cafeenlinea.data.remote.Cafeteria
 import com.example.cafeenlinea.data.remote.Escuela
 import com.example.cafeenlinea.data.remote.SinConexionException
+import com.example.cafeenlinea.data.remote.mensajeDeError
 import com.example.cafeenlinea.ui.auth.data.SessionPreferences
+import com.example.cafeenlinea.ui.auth.model.PASSWORD_MIN_LENGTH
 import com.example.cafeenlinea.ui.auth.model.RegisterUiState
-import kotlinx.coroutines.Job
+import com.example.cafeenlinea.ui.auth.model.validarCuenta
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** Mismo mínimo que valida el servidor en la mutación `registro`. */
-internal const val PASSWORD_MIN_LENGTH = 6
-
 /**
- * Registro contra el backend GraphQL. Si sale bien, el servidor ya devuelve la
- * sesión, así que se guarda igual que en el login y se entra directo a la app.
+ * Registro de alumnos contra el backend GraphQL. Si sale bien, el servidor ya
+ * devuelve la sesión, así que se guarda igual que en el login y se entra directo.
  */
 class RegisterViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -34,10 +31,10 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
 
-    private var cafeteriasJob: Job? = null
-
     private fun str(@StringRes id: Int, vararg args: Any): String =
         getApplication<Application>().getString(id, *args)
+
+    private fun str(@StringRes id: Int?): String? = id?.let { str(it, PASSWORD_MIN_LENGTH) }
 
     init {
         loadEscuelas()
@@ -57,57 +54,28 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
     fun onConfirmPasswordChanged(value: String) =
         _uiState.update { it.copy(confirmPassword = value, confirmPasswordError = null, error = null) }
 
-    // ---- Escuela y cafetería ----
+    // ---- Escuela (escrita a mano, con sugerencias del catálogo) ----
 
     fun loadEscuelas() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoadingCatalogos = true, catalogosError = null) }
+            _uiState.update { it.copy(escuela = it.escuela.cargandoCatalogo()) }
             try {
                 val escuelas = ApiClient.escuelas()
-                _uiState.update { it.copy(isLoadingCatalogos = false, escuelas = escuelas) }
-                // Si solo hay una escuela, se elige sola
-                escuelas.singleOrNull()?.let { onEscuelaSelected(it) }
+                _uiState.update { it.copy(escuela = it.escuela.conCatalogo(escuelas)) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoadingCatalogos = false, catalogosError = mensajeCatalogos(e)) }
+                _uiState.update { it.copy(escuela = it.escuela.conErrorCatalogo(mensajeCatalogos(e))) }
             }
         }
     }
 
-    fun onEscuelaSelected(escuela: Escuela) {
-        _uiState.update {
-            it.copy(
-                escuelaSeleccionada = escuela,
-                cafeterias = emptyList(),
-                cafeteriaSeleccionada = null,
-                error = null
-            )
-        }
-        cafeteriasJob?.cancel()
-        cafeteriasJob = viewModelScope.launch {
-            _uiState.update { it.copy(isLoadingCatalogos = true, catalogosError = null) }
-            try {
-                val cafeterias = ApiClient.cafeteriasPorEscuela(escuela.id)
-                _uiState.update {
-                    it.copy(
-                        isLoadingCatalogos = false,
-                        cafeterias = cafeterias,
-                        cafeteriaSeleccionada = cafeterias.singleOrNull()
-                    )
-                }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isLoadingCatalogos = false, catalogosError = mensajeCatalogos(e)) }
-            }
-        }
-    }
+    fun onEscuelaTextoChanged(value: String) =
+        _uiState.update { it.copy(escuela = it.escuela.conTexto(value), error = null) }
 
-    fun onCafeteriaSelected(cafeteria: Cafeteria) =
-        _uiState.update { it.copy(cafeteriaSeleccionada = cafeteria, error = null) }
+    fun onEscuelaSugeridaSelected(escuela: Escuela) =
+        _uiState.update { it.copy(escuela = it.escuela.conSugerencia(escuela), error = null) }
 
-    /** Reintenta lo que haya fallado: escuelas, o las cafeterías de la escuela elegida. */
-    fun retryCatalogos() {
-        val escuela = _uiState.value.escuelaSeleccionada
-        if (escuela == null) loadEscuelas() else onEscuelaSelected(escuela)
-    }
+    fun onCiudadChanged(value: String) =
+        _uiState.update { it.copy(escuela = it.escuela.conCiudad(value), error = null) }
 
     // ---- Registro ----
 
@@ -115,34 +83,17 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
         val state = _uiState.value
         if (state.isLoading) return
 
-        val nombre = state.nombre.trim()
-        val correo = state.correo.trim()
+        val cuenta = validarCuenta(state.nombre, state.correo, state.password, state.confirmPassword)
+        val (escuela, escuelaValida) = state.escuela.validada()
 
-        val nombreError = if (nombre.isBlank()) str(R.string.register_error_name_required) else null
-        val correoError = when {
-            correo.isBlank() -> str(R.string.login_error_email_required)
-            !Patterns.EMAIL_ADDRESS.matcher(correo).matches() -> str(R.string.register_error_email_invalid)
-            else -> null
-        }
-        val passwordError = when {
-            state.password.isBlank() -> str(R.string.login_error_password_required)
-            state.password.length < PASSWORD_MIN_LENGTH -> str(R.string.register_error_password_short, PASSWORD_MIN_LENGTH)
-            else -> null
-        }
-        val confirmError =
-            if (state.confirmPassword != state.password) str(R.string.register_error_password_mismatch) else null
-        val cafeteria = state.cafeteriaSeleccionada
-
-        if (nombreError != null || correoError != null || passwordError != null ||
-            confirmError != null || cafeteria == null
-        ) {
+        if (cuenta.hayErrores || !escuelaValida) {
             _uiState.update {
                 it.copy(
-                    nombreError = nombreError,
-                    correoError = correoError,
-                    passwordError = passwordError,
-                    confirmPasswordError = confirmError,
-                    error = if (cafeteria == null) str(R.string.register_error_cafeteria_required) else null
+                    nombreError = str(cuenta.nombre),
+                    correoError = str(cuenta.correo),
+                    passwordError = str(cuenta.password),
+                    confirmPasswordError = str(cuenta.confirmPassword),
+                    escuela = escuela
                 )
             }
             return
@@ -151,7 +102,14 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                val sesion = ApiClient.registro(nombre, correo, state.password, cafeteria.id)
+                val sesion = ApiClient.registro(
+                    nombre = state.nombre.trim(),
+                    correo = state.correo.trim(),
+                    password = state.password,
+                    escuelaId = escuela.seleccionada?.id,
+                    nombreEscuela = escuela.nombreLimpio,
+                    ciudadEscuela = escuela.ciudadParaEnviar
+                )
                 session.saveSession(sesion.token, sesion.expiraEn, sesion.usuario)
                 _uiState.update { it.copy(isLoading = false, isRegistered = true) }
             } catch (e: SinConexionException) {
@@ -162,7 +120,7 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
                         it.copy(isLoading = false, correoError = str(R.string.register_error_email_taken))
                     }
                 } else {
-                    _uiState.update { it.copy(isLoading = false, error = e.message ?: str(R.string.error_server)) }
+                    _uiState.update { it.copy(isLoading = false, error = mensajeDeError(e, "crear la cuenta")) }
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = str(R.string.register_error_generic)) }
